@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>开笔 · 文舒</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/app.css">
+<script src="../cordova.js"></script>
+<script src="../js/boot.js"></script>
+<style>
+  html, body { width: 100%; min-height: 100%; }
+  body { background: var(--paper); }
+  .editor-canvas.with-rail {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 84px);
+    padding-bottom: 120px;
+  }
+
+  /* rail 紧凑化 */
+  .editor-rail .left, .editor-rail .right { gap: 10px; min-width: 0; }
+  .editor-rail .left { flex: 1 1 auto; overflow: hidden; }
+  .editor-rail .right { flex: 0 0 auto; }
+  .editor-rail .left .novel {
+    max-width: 28vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .editor-rail .save-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--ink-ghost);
+    display: inline-block;
+    flex: 0 0 auto;
+    transition: background .25s ease;
+  }
+  .editor-rail .save-dot.saving { background: var(--vermilion); }
+  @media (max-width: 480px) {
+    .editor-rail .word-target { display: none; }
+    .editor-rail .left .novel { display: none; }
+    .editor-rail #back-plan { font-size: 0; }
+    .editor-rail #back-plan::before {
+      content: '←';
+      font-size: 11px;
+      letter-spacing: 0;
+    }
+  }
+
+  .ai-tools {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    padding: var(--s-3) 0 var(--s-4);
+    border-top: 1px solid var(--paper-edge);
+    margin-top: var(--s-5);
+  }
+  .ai-tools button {
+    background: transparent;
+    border: 1px solid var(--paper-edge);
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .ai-tools button:hover { color: var(--ink); border-color: var(--ink); }
+  .ai-tools button.vermilion { color: var(--vermilion); border-color: var(--vermilion); }
+  .ai-tools button.vermilion:hover { background: var(--vermilion); color: var(--paper); }
+  .ai-tools button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .word-target {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--ink-ghost);
+    padding-left: 8px;
+  }
+  .editor-rail .wc.short { color: var(--ink-ghost); }
+  .editor-rail .wc.ok    { color: var(--ink); }
+  .editor-rail .wc.over  { color: var(--vermilion); }
+
+  .pending-banner {
+    text-align: center;
+    padding: var(--s-7) var(--s-5);
+    border: 1px dashed var(--paper-edge);
+    font-family: var(--font-mincho);
+    font-size: 14px;
+    line-height: 2;
+    color: var(--ink-faint);
+  }
+  .pending-banner .glyph {
+    font-size: 28px;
+    color: var(--ink-ghost);
+    margin-bottom: var(--s-3);
+    letter-spacing: 0.2em;
+  }
+  .pending-banner .hint {
+    font-size: 12.5px;
+    color: var(--ink-ghost);
+    margin-top: var(--s-3);
+    letter-spacing: 0.04em;
+  }
+
+  .chapter-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: var(--s-5) 0 var(--s-3);
+    margin-top: var(--s-6);
+    border-top: 1px solid var(--paper-edge);
+  }
+  .chapter-nav a, .chapter-nav span {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--ink-ghost);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .chapter-nav a:hover { color: var(--ink); }
+  .chapter-nav .disabled { opacity: 0.3; pointer-events: none; }
+</style>
+</head>
+<body>
+  <div class="editor-rail">
+    <div class="left">
+      <a href="#" id="back-plan" data-back-fallback="library.html" style="color:var(--ink-ghost); text-decoration:none;">← 谋篇</a>
+      <span id="ch-label">第 -- 章</span>
+      <span class="novel" id="novel-title">载入中</span>
+    </div>
+    <div class="right">
+      <span class="save-dot" id="save-status" aria-label="已保存" title="已保存"></span>
+      <span class="wc"><span id="wc">0</span> 字<span class="word-target"> / 3000-5000</span></span>
+      <button id="peek-toggle" aria-label="大纲">
+        <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.2" fill="none">
+          <path d="M2 3.5h10M2 7h10M2 10.5h6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="outline-peek-mask" id="peek-mask"></div>
+  <aside class="outline-peek" id="peek">
+    <button class="peek-close" id="peek-close" aria-label="收起大纲">×</button>
+    <h3>本卷大纲</h3>
+    <div id="peek-list"></div>
+    <p id="peek-event" style="margin-top:var(--s-6);font-family:var(--font-mincho);font-size:12.5px;line-height:1.85;color:var(--ink-faint);letter-spacing:0.02em;"></p>
+  </aside>
+
+  <main class="screen-body" style="top:0;">
+    <article class="editor-canvas with-rail">
+      <h1 class="title-input" contenteditable="true" data-placeholder="章节标题" id="title">载入中…</h1>
+      <div class="meta-row">
+        <span class="meta" id="meta-row">第 -- 章</span>
+      </div>
+
+      <div id="pending-wrap" style="display:none;">
+        <div class="pending-banner">
+          <div class="glyph mincho">未</div>
+          本章尚未落笔。<br>核心事件、出场人物、章末钩子已备好在大纲里。
+          <div style="margin-top: var(--s-4);">
+            <button class="btn-quiet vermilion" id="gen-ch">让 AI 落 笔</button>
+            <button class="btn-quiet" id="manual-write" style="margin-left: 12px;">自 己 写</button>
+          </div>
+          <div class="hint">流式生成 · 可随时打断 · 完成后自动保存</div>
+        </div>
+      </div>
+
+      <div class="body-input" contenteditable="true" data-placeholder="正文从这里落笔。每段空一行。" id="body" style="display:none;"></div>
+
+      <div class="hook-field" id="hook-field" style="display:none;">
+        <div class="label">章 末 悬 念 钩 · 写 给 下 一 章 的 自 己</div>
+        <div class="input" contenteditable="true" id="hook-input"
+             data-placeholder="例：他没有告诉老张，三十年前那双鞋的主人，叫林秀。"></div>
+      </div>
+
+      <div class="ai-tools" id="ai-tools" style="display:none;">
+        <button id="regen">让 AI 重 写 本 章</button>
+        <button id="continue">续 写 一 段</button>
+        <button id="polish">润 色 本 段</button>
+        <button id="score">给 本 章 打 分</button>
+      </div>
+
+      <div id="score-result" style="margin-top: var(--s-4);"></div>
+
+      <div class="chapter-nav">
+        <a id="prev-ch">← 上 一 章</a>
+        <a id="finish-ch" class="vermilion" style="color: var(--vermilion);">完 成 本 章 · 去 下 一 章</a>
+        <a id="next-ch">下 一 章 →</a>
+      </div>
+    </article>
+  </main>
+
+  <script type="module">
+    import { getNovel, getChapter, upsertChapter, updateNovel } from '../js/store.js';
+    import { chapterPrompt, summaryPrompt, scoringPrompt } from '../js/prompts.js';
+    import { chat, stream, parseJson } from '../js/deepseek.js';
+    import { toast, confirmDialog, $, $$, urlParam, debounce, cnWordCount, chCn, vibrate, requireApiKey, bindGlobalTapVibration, bindBackButtons } from '../js/utils.js';
+
+    if (!requireApiKey()) throw new Error('redirected');
+    bindGlobalTapVibration();
+    bindBackButtons();
+
+    const novelId = urlParam('novel');
+    const chN = parseInt(urlParam('ch') || '1', 10);
+    const novel = novelId ? getNovel(novelId) : null;
+
+    if (!novel) {
+      document.querySelector('.editor-canvas').innerHTML = `
+        <div class="empty-state">
+          <div class="glyph mincho">空</div>
+          <p class="hint">没有找到这部小说。</p>
+          <a class="btn-quiet" href="library.html">回 到 书 房</a>
+        </div>`;
+      throw new Error('no novel');
+    }
+
+    const meta = novel.outline.find((r) => r.n === chN) || { n: chN, title: '未命名', event: '', prev: '', hook: '', characters: [], scene: '' };
+    let chapter = getChapter(novel.id, chN) || {
+      n: chN, title: meta.title || '', status: 'pending',
+      body: '', wordCount: 0, hook: meta.hook || ''
+    };
+
+    // 标头
+    document.title = `${chapter.title || '第' + chN + '章'} · 文舒`;
+    $('#novel-title').textContent = novel.title;
+    $('#ch-label').textContent = `第 ${chCn(chN)} 章`;
+    $('#meta-row').textContent = `第 ${chCn(chN)} 章 · 共 ${novel.outline?.length || '-'} 章`;
+    $('#title').textContent = chapter.title || meta.title || '未命名';
+    $('#back-plan').href = `plan.html?novel=${novel.id}`;
+    $('#back-plan').dataset.backFallback = `plan.html?novel=${novel.id}`;
+
+    // 上下章导航
+    const totalChapters = novel.outline?.length || 0;
+    const prevA = $('#prev-ch'), nextA = $('#next-ch');
+    if (chN <= 1) prevA.classList.add('disabled'); else prevA.href = `editor.html?novel=${novel.id}&ch=${chN - 1}`;
+    if (chN >= totalChapters) nextA.classList.add('disabled'); else nextA.href = `editor.html?novel=${novel.id}&ch=${chN + 1}`;
+    $('#finish-ch').onclick = (e) => {
+      e.preventDefault();
+      vibrate('ok');
+      flushNow();
+      const nextN = Math.min(chN + 1, totalChapters || chN);
+      const finished = chapter.body && cnWordCount(chapter.body) >= 1500;
+      if (finished) {
+        chapter.status = 'completed';
+        upsertChapter(novel.id, chapter);
+      }
+      updateNovel(novel.id, { currentChapter: nextN });
+      if (nextN === chN) {
+        toast('已 是 最 后 一 章 · 全 书 完 笔', 'success');
+        vibrate('done');
+        setTimeout(() => location.href = `reader.html?novel=${novel.id}`, 1200);
+      } else {
+        location.href = `editor.html?novel=${novel.id}&ch=${nextN}`;
+      }
+    };
+
+    // 大纲峰窥
+    function renderPeek() {
+      const list = (novel.outline || []).map((r) => `
+        <div class="pk-row ${r.n === chN ? 'current' : ''}">
+          <span class="n">${String(r.n).padStart(2, '0')}</span>
+          <span>${r.title || '未命名'}${r.n === chN ? ' · 写作中' : ''}</span>
+        </div>`).join('');
+      $('#peek-list').innerHTML = list;
+      $('#peek-event').innerHTML = `
+        <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.20em;text-transform:uppercase;color:var(--ink-ghost);display:block;margin-bottom:6px;">本章核心事件</span>
+        ${meta.event || '（大纲未指定）'}<br>
+        <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.20em;text-transform:uppercase;color:var(--ink-ghost);display:block;margin: var(--s-3) 0 6px;">出场</span>
+        ${(meta.characters || []).join('、') || '—'}<br>
+        <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.20em;text-transform:uppercase;color:var(--ink-ghost);display:block;margin: var(--s-3) 0 6px;">章末钩子</span>
+        ${meta.hook || '—'}`;
+    }
+    renderPeek();
+
+    // 大纲抽屉开关：rail 上的按钮 toggle；mask 点击 & 关闭按钮 收起
+    function openPeek() {
+      $('#peek').classList.add('open');
+      $('#peek-mask').classList.add('open');
+    }
+    function closePeek() {
+      $('#peek').classList.remove('open');
+      $('#peek-mask').classList.remove('open');
+    }
+    $('#peek-toggle').onclick = (e) => {
+      e.preventDefault();
+      vibrate('tap');
+      if ($('#peek').classList.contains('open')) closePeek(); else openPeek();
+    };
+    $('#peek-close').onclick = (e) => { e.preventDefault(); vibrate('tap'); closePeek(); };
+    $('#peek-mask').onclick = closePeek;
+
+    // 显示模式（pending / writing-completed）
+    const pendingWrap = $('#pending-wrap');
+    const body = $('#body');
+    const hookField = $('#hook-field');
+    const hookInput = $('#hook-input');
+    const aiTools = $('#ai-tools');
+
+    function showWritingMode() {
+      pendingWrap.style.display = 'none';
+      body.style.display = 'block';
+      hookField.style.display = 'block';
+      aiTools.style.display = 'flex';
+      hookInput.textContent = chapter.hook || meta.hook || '';
+    }
+    function showPendingMode() {
+      pendingWrap.style.display = 'block';
+      body.style.display = 'none';
+      hookField.style.display = 'none';
+      aiTools.style.display = 'none';
+    }
+    if (chapter.body) {
+      body.innerHTML = chapter.body.split('\n\n').map((p) => p.trim()).filter(Boolean)
+        .map((p) => p.startsWith('> ') ? `<blockquote>${p.slice(2)}</blockquote>` : `<p>${p}</p>`).join('');
+      showWritingMode();
+      updateWc();
+    } else {
+      showPendingMode();
+    }
+
+    // 字数统计
+    function updateWc() {
+      const text = (body.innerText || '').replace(/\s/g, '');
+      const n = [...text].length;
+      const wcEl = $('#wc');
+      wcEl.textContent = n.toLocaleString();
+      const wrap = wcEl.parentElement;
+      wrap.classList.remove('short', 'ok', 'over');
+      if (n < 3000) wrap.classList.add('short');
+      else if (n > 5000) wrap.classList.add('over');
+      else wrap.classList.add('ok');
+      return n;
+    }
+
+    // 自动保存
+    const saveStatus = $('#save-status');
+    const flushNow = () => {
+      // 提取正文
+      const md = htmlToMd(body);
+      chapter.body = md;
+      chapter.title = $('#title').innerText.trim() || chapter.title || meta.title;
+      chapter.hook = hookInput.innerText.trim();
+      chapter.wordCount = cnWordCount(md);
+      if (chapter.wordCount > 0 && chapter.status === 'pending') chapter.status = 'writing';
+      upsertChapter(novel.id, chapter);
+      saveStatus.classList.remove('saving');
+      saveStatus.setAttribute('aria-label', '已保存');
+      saveStatus.title = '已保存';
+    };
+    const autosave = debounce(() => { flushNow(); }, 800);
+    function markDirty() {
+      saveStatus.classList.add('saving');
+      saveStatus.setAttribute('aria-label', '保存中');
+      saveStatus.title = '保存中';
+      autosave();
+    }
+
+    function htmlToMd(node) {
+      const parts = [];
+      for (const child of node.children) {
+        const t = (child.innerText || '').trim();
+        if (!t) continue;
+        if (child.tagName === 'BLOCKQUOTE') parts.push(`> ${t}`);
+        else if (child.tagName === 'H2') parts.push(`## ${t}`);
+        else parts.push(t);
+      }
+      if (parts.length === 0 && node.innerText.trim()) {
+        // 用户在裸文本编辑
+        return node.innerText.trim();
+      }
+      return parts.join('\n\n');
+    }
+
+    body.addEventListener('input', () => { updateWc(); markDirty(); });
+    $('#title').addEventListener('input', markDirty);
+    hookInput.addEventListener('input', markDirty);
+
+    // 沉浸：键入时淡出 rail
+    const rail = document.querySelector('.editor-rail');
+    rail.style.transition = 'opacity .5s ease';
+    let railT;
+    body.addEventListener('input', () => {
+      rail.style.opacity = '0.2';
+      clearTimeout(railT);
+      railT = setTimeout(() => rail.style.opacity = '1', 3000);
+    });
+
+    // === AI 落笔（流式） ===
+    let streaming = false;
+    let abortStream = false;
+
+    async function generateChapter() {
+      if (streaming) { abortStream = true; toast('已 中 断'); vibrate('warn'); return; }
+
+      // 上一章上下文
+      const prevCh = novel.chapters?.find((c) => c.n === chN - 1);
+      const prevBody = prevCh?.body || '';
+      const prevSummary = prevCh?.summary || '';
+
+      streaming = true;
+      vibrate('start');
+      $('#gen-ch').textContent = '中 断 · 已 流 式';
+      $('#regen').textContent = '中 断 · 已 流 式';
+
+      showWritingMode();
+      body.innerHTML = '<p></p>';
+      const target = body.querySelector('p');
+      target.classList.add('streaming-caret');
+
+      const msgs = chapterPrompt(novel, meta, prevBody, prevSummary);
+      let fullText = '';
+      try {
+        await stream(msgs, { temperature: 0.85 }, (delta, full) => {
+          if (abortStream) throw new Error('用户中断');
+          fullText = full;
+          // 简单按双换行分段渲染
+          const paras = full.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+          body.innerHTML = paras.map((p, i) => {
+            const isLast = i === paras.length - 1;
+            const caret = isLast ? ' streaming-caret' : '';
+            if (p.startsWith('> ')) return `<blockquote class="${caret.trim()}">${p.slice(2)}</blockquote>`;
+            return `<p class="${caret.trim()}">${p}</p>`;
+          }).join('');
+          updateWc();
+        });
+      } catch (e) {
+        if (!abortStream) { toast('生 成 失 败：' + e.message, 'error'); vibrate('warn'); }
+      }
+      streaming = false;
+      abortStream = false;
+      $('#gen-ch').textContent = '让 AI 落 笔';
+      $('#regen').textContent = '让 AI 重 写 本 章';
+
+      // 渲染去掉光标
+      body.querySelectorAll('.streaming-caret').forEach((el) => el.classList.remove('streaming-caret'));
+
+      if (fullText) {
+        chapter.body = fullText;
+        chapter.wordCount = cnWordCount(fullText);
+        chapter.status = 'writing';
+        chapter.title = $('#title').innerText.trim() || chapter.title || meta.title;
+        upsertChapter(novel.id, chapter);
+        vibrate('done');
+        toast('章 节 已 落 笔', 'success');
+
+        // 后台生成摘要
+        try {
+          const sum = await chat(summaryPrompt(meta, fullText), { temperature: 0.4 });
+          chapter.summary = sum.trim();
+          upsertChapter(novel.id, chapter);
+        } catch (e) { /* 不阻塞 */ }
+      }
+    }
+
+    $('#gen-ch').onclick = generateChapter;
+    $('#regen').onclick = async () => {
+      vibrate('tap');
+      const ok = await confirmDialog('确认让 AI 重新写这一章？当前正文会被覆盖。', { okLabel: '覆 盖' });
+      if (!ok) return;
+      generateChapter();
+    };
+    $('#manual-write').onclick = () => {
+      vibrate('tap');
+      chapter.status = 'writing';
+      chapter.body = '';
+      upsertChapter(novel.id, chapter);
+      showWritingMode();
+      body.innerHTML = '<p></p>';
+      body.focus();
+      updateWc();
+    };
+
+    // 续写一段
+    $('#continue').onclick = async () => {
+      if (streaming) return;
+      const current = htmlToMd(body);
+      if (cnWordCount(current) < 200) { toast('先 写 一 些 内 容', 'error'); vibrate('warn'); return; }
+      streaming = true;
+      vibrate('start');
+      $('#continue').disabled = true;
+      const tail = current.slice(-600);
+      const sys = `你是中文小说家，正在为《${novel.title}》第${chN}章续写。延续语气、视角、节奏，写 2-4 段，约 300-500 字。仅输出新段落，不要重复已有内容，不要加任何说明。`;
+      const usr = `本章核心事件：${meta.event}\n章末钩子（最终段需贴近）：${meta.hook}\n\n已写正文末尾：\n${tail}\n\n请续写。`;
+      try {
+        let added = '';
+        await stream([{ role: 'system', content: sys }, { role: 'user', content: usr }], { temperature: 0.85 }, (delta, full) => {
+          added = full;
+        });
+        if (added) {
+          const newP = document.createElement('p');
+          newP.textContent = added.trim();
+          body.appendChild(newP);
+          updateWc();
+          flushNow();
+          vibrate('done');
+        }
+      } catch (e) {
+        toast('续 写 失 败：' + e.message, 'error');
+        vibrate('warn');
+      }
+      streaming = false;
+      $('#continue').disabled = false;
+    };
+
+    // 润色：润色当前段（最后一段）
+    $('#polish').onclick = async () => {
+      if (streaming) return;
+      const paras = [...body.querySelectorAll('p, blockquote')];
+      if (!paras.length) { toast('没 有 可 润 色 的 段', 'error'); vibrate('warn'); return; }
+      const last = paras[paras.length - 1];
+      const txt = last.innerText.trim();
+      if (!txt) return;
+      vibrate('start');
+      $('#polish').disabled = true;
+      const sys = `你是中文小说家。请润色下面这段，要求：保持原意，去除AI腔（此外/然而/仿佛/宛如/不禁/这一刻），减少形容词，长短句交替，对话有潜台词。直接返回润色后的段落，不要任何前缀。`;
+      try {
+        const reply = await chat([{ role: 'system', content: sys }, { role: 'user', content: txt }], { temperature: 0.7 });
+        if (reply.trim()) {
+          last.textContent = reply.trim();
+          updateWc();
+          flushNow();
+          vibrate('done');
+          toast('已 润 色', 'success');
+        }
+      } catch (e) { toast('润 色 失 败：' + e.message, 'error'); vibrate('warn'); }
+      $('#polish').disabled = false;
+    };
+
+    // 打分
+    $('#score').onclick = async () => {
+      flushNow();
+      if (!chapter.body || cnWordCount(chapter.body) < 1000) { toast('字 数 不 足 · 至 少 1000 字', 'error'); vibrate('warn'); return; }
+      vibrate('start');
+      $('#score').disabled = true;
+      $('#score-result').innerHTML = `<div class="ai-banner"><span class="glyph"></span><span>AI 编辑 正 在 阅 卷…</span></div>`;
+      try {
+        const reply = await chat(scoringPrompt(meta, chapter.body), { temperature: 0.3, jsonMode: true });
+        const r = parseJson(reply);
+        if (!r) throw new Error('解析失败');
+        const dims = [
+          ['opening', '开头吸引力'], ['plot', '情节推进'], ['character', '人物塑造'],
+          ['dialogue', '对话质量'], ['suspense', '悬念设置'], ['pace', '节奏控制'],
+          ['show', '展示而非讲述'], ['language', '语言质量']
+        ];
+        const total = r.total || Object.values(r.scores || {}).reduce((s, v) => s + v, 0);
+        const verdict = (r.verdict || '').toLowerCase();
+        $('#score-result').innerHTML = `
+          <div class="summary-card" style="display:block; padding: var(--s-5); border: 1px solid var(--paper-edge); font-family: var(--font-mincho); font-size: 14px; line-height: 1.9;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--s-3);">
+              <strong style="font-size: 22px; color: ${verdict === 'pass' ? 'var(--ink)' : 'var(--vermilion)'}">${total} / 80</strong>
+              <span style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.22em; color: ${verdict === 'pass' ? 'var(--ink)' : 'var(--vermilion)'}">${verdict === 'pass' ? 'PASS · 过 关' : 'REVISE · 需 改'}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 16px; padding: var(--s-3) 0; border-top: 1px solid var(--paper-edge);">
+              ${dims.map(([k, l]) => `<div style="display: flex; justify-content: space-between;"><span style="color: var(--ink-faint);">${l}</span><span style="font-family: var(--font-mono); color: ${(r.scores?.[k] || 0) >= 7 ? 'var(--ink)' : 'var(--vermilion)'};">${r.scores?.[k] || 0} / 10</span></div>`).join('')}
+            </div>
+            ${r.suggestions?.length ? `
+              <div style="border-top: 1px solid var(--paper-edge); padding-top: var(--s-3); margin-top: var(--s-3);">
+                <span style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; color: var(--ink-ghost);">编 辑 建 议</span>
+                <ul style="margin: var(--s-2) 0 0; padding-left: 18px; color: var(--ink-faint); font-size: 13.5px; line-height: 1.85;">
+                  ${r.suggestions.map((s) => `<li>${s}</li>`).join('')}
+                </ul>
+              </div>` : ''}
+          </div>`;
+        chapter.scored = r;
+        upsertChapter(novel.id, chapter);
+        vibrate('done');
+      } catch (e) {
+        $('#score-result').innerHTML = `<div class="ai-banner error"><span class="glyph"></span><span>打分失败：${e.message}</span></div>`;
+        vibrate('warn');
+      }
+      $('#score').disabled = false;
+    };
+
+    // 离页时保存
+    window.addEventListener('beforeunload', flushNow);
+    updateWc();
+  </script>
+</body>
+</html>

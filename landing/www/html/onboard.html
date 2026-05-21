@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>立项 · 文舒</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/app.css">
+<script src="../cordova.js"></script>
+<script src="../js/boot.js"></script>
+<style>
+  html, body { width: 100%; min-height: 100%; }
+  body { background: var(--paper); }
+
+  .title-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1px;
+    background: var(--paper-edge);
+    border-top: 1px solid var(--paper-edge);
+    border-bottom: 1px solid var(--paper-edge);
+    margin-bottom: var(--s-4);
+  }
+  .title-cards .t-card {
+    background: var(--paper);
+    padding: 14px 16px;
+    cursor: pointer;
+    font-family: var(--font-mincho);
+    font-size: 18px;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background .15s ease;
+  }
+  .title-cards .t-card:hover { background: var(--paper-deep); }
+  .title-cards .t-card[aria-selected="true"] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .title-cards .t-card .seq {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--ink-ghost);
+  }
+  .title-cards .t-card[aria-selected="true"] .seq { color: var(--paper); opacity: 0.6; }
+
+  .skip-link {
+    display: inline-block;
+    font-family: var(--font-mincho);
+    font-size: 13px;
+    color: var(--ink-ghost);
+    letter-spacing: 0.08em;
+    margin-top: var(--s-3);
+    cursor: pointer;
+    border-bottom: 1px dashed var(--paper-edge);
+    padding-bottom: 2px;
+  }
+  .skip-link:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+  .review-card {
+    border: 1px solid var(--paper-edge);
+    padding: var(--s-5);
+    font-family: var(--font-mincho);
+    font-size: 13.5px;
+    line-height: 2;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+    margin-bottom: var(--s-5);
+  }
+  .review-card .row {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 6px var(--s-4);
+    padding: 6px 0;
+  }
+  .review-card .row dt { color: var(--ink-ghost); margin: 0; }
+  .review-card .row dd { color: var(--ink); margin: 0; }
+</style>
+</head>
+<body>
+  <a class="ghost tl" href="library.html" data-back-fallback="library.html" aria-label="返回">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
+      <path d="M8.5 2.5L4 7l4.5 4.5"/>
+    </svg>
+  </a>
+
+  <section class="onboard">
+    <div class="progress" id="progress">立 项 · Q <span class="now">1</span> / 8</div>
+
+    <h2 class="onboard-q" id="q-prompt">题材偏好？</h2>
+    <p class="onboard-sub" id="q-sub">先决定大方向，后面再细化。⭐ 是你 设置 里的常用项。</p>
+
+    <div class="onboard-options" id="q-options"></div>
+
+    <div class="onboard-free" id="q-free" style="display:none;">
+      <input id="q-free-input" placeholder="自由描述（按 Enter 进入下一题）">
+    </div>
+
+    <div id="q-after"></div>
+
+    <div class="onboard-foot">
+      <button class="back" id="btn-back">← 上 一 题</button>
+      <button class="next" id="btn-next" disabled>下 一 题 →</button>
+    </div>
+
+    <a class="skip-link" id="btn-skip" style="margin-top: var(--s-5); display: block; text-align: center;">跳过本层 · 进入标题</a>
+  </section>
+
+  <script type="module">
+    import { getPrefs, createNovel } from '../js/store.js';
+    import { titlesPrompt, loglinePrompt } from '../js/prompts.js';
+    import { chat, parseJson } from '../js/deepseek.js';
+    import { toast, $, $$, vibrate, requireApiKey, bindGlobalTapVibration, bindBackButtons } from '../js/utils.js';
+
+    if (!requireApiKey()) throw new Error('redirected');
+    bindGlobalTapVibration();
+    bindBackButtons();
+
+    const prefs = getPrefs();
+    const spec = {}; // 收集中
+    let step = 0;
+    let titleCandidates = [];
+    let selectedTitle = '';
+
+    // 把 prefs 的常用项标记 ⭐ 并排前
+    function withStarred(options, starList) {
+      if (!starList?.length) return options;
+      const stars = new Set(starList);
+      return [
+        ...options.filter((o) => stars.has(o.v)).map((o) => ({ ...o, star: true })),
+        ...options.filter((o) => !stars.has(o.v))
+      ];
+    }
+
+    const STEPS = [
+      {
+        key: 'genre',
+        prompt: '想写哪类小说？',
+        sub: '决定大方向，后面再细化。⭐ 是你"设置"里的偏好。',
+        type: 'choice',
+        options: withStarred([
+          { v: '悬疑推理' }, { v: '言情' }, { v: '奇幻玄幻' },
+          { v: '科幻未来' }, { v: '武侠仙侠' }, { v: '历史架空' },
+          { v: '都市现实' }, { v: '惊悚' }
+        ], prefs.genres),
+        allowFree: '自由描述题材',
+        after: {
+          key: 'creative',
+          prompt: '一句话讲讲这部小说的"题眼"是什么？',
+          placeholder: '例：一个气象学家测了一辈子雨，却测不准遇见她的那一场'
+        }
+      },
+      {
+        key: 'protagonist',
+        prompt: '主角的搭配？',
+        sub: '主角的"形"——一个、两个、还是一群人？',
+        type: 'choice',
+        options: withStarred([
+          { v: '单男主' }, { v: '单女主' }, { v: '双主角' }, { v: '群像戏' }
+        ], prefs.protagonists),
+        after: {
+          key: 'career',
+          prompt: '主角的职业 / 身份？',
+          placeholder: '例：退役刑警、气象学家、旧书店主、修复师、史官……'
+        }
+      },
+      {
+        key: 'personality',
+        prompt: '主角的核心性格？',
+        sub: '一种气质——后面写对话时，AI 会顺着这条线走。',
+        type: 'choice',
+        options: [
+          { v: '热血正义' }, { v: '冷静智慧' }, { v: '温暖治愈' },
+          { v: '高冷孤傲' }, { v: '阴暗腹黑' }, { v: '成长逆袭' }
+        ],
+        allowFree: '自由描述性格',
+      },
+      {
+        key: 'conflict',
+        prompt: '驱动整部小说的核心冲突？',
+        sub: '一切剧情会绕着这个旋转。',
+        type: 'choice',
+        options: [
+          { v: '生死存亡' }, { v: '查明真相' }, { v: '爱情阻碍' },
+          { v: '复仇雪恨' }, { v: '权力争夺' }, { v: '成长突破' },
+          { v: '守护保护' }
+        ],
+        allowFree: '自由描述冲突',
+        after: {
+          key: 'drive',
+          prompt: '主角行动的驱动力？',
+          placeholder: '例：复仇 / 爱情 / 责任 / 好奇心 / 生存 / 野心 ……'
+        }
+      },
+      // ===== Layer 2 (可跳过) =====
+      {
+        key: 'world',
+        prompt: '世界观 / 时空背景？',
+        sub: '当代？古代？架空？哪个城市、哪一季？（可跳过）',
+        type: 'free',
+        placeholder: '例：当代南方海港城市，梅雨季常驻',
+        skippable: true,
+      },
+      {
+        key: 'viewpoint',
+        prompt: '叙事视角 + 基调？',
+        sub: '哪一双眼睛看这个故事，看出哪一种气味。',
+        type: 'choice',
+        options: withStarred([
+          { v: '第一人称' }, { v: '三人称限制' }, { v: '三人称全知' }, { v: '多视角交替' }
+        ], [prefs.viewpoint]),
+        skippable: true,
+        after: {
+          key: 'tone',
+          prompt: '基调（一句话即可）',
+          placeholder: '例：紧张冷峻 / 轻松幽默 / 温情治愈 / 黑暗深沉'
+        }
+      },
+      {
+        key: 'theme',
+        prompt: '想写的主题是什么？',
+        sub: '不必准确，写一句你自己的"我想说的事"。',
+        type: 'free',
+        placeholder: '例：时间会替不愿说的人开口',
+        skippable: true,
+      },
+      {
+        key: 'chapters',
+        prompt: '想写多少章？',
+        sub: '10-50 章。中篇 12-18，长篇 20-30，巨制 30+。',
+        type: 'number',
+        min: 10, max: 50,
+        defaultVal: prefs.chapters || 15,
+        skippable: false,
+      }
+    ];
+
+    function render() {
+      const qPrompt = $('#q-prompt');
+      const qSub = $('#q-sub');
+      const qOptions = $('#q-options');
+      const qFree = $('#q-free');
+      const qAfter = $('#q-after');
+      const next = $('#btn-next');
+      const skip = $('#btn-skip');
+
+      if (step >= STEPS.length) {
+        renderTitleStep();
+        return;
+      }
+
+      const s = STEPS[step];
+      $('#progress').innerHTML = `立 项 · Q <span class="now">${step + 1}</span> / ${STEPS.length + 1}`;
+      qPrompt.textContent = s.prompt;
+      qSub.textContent = s.sub;
+      qOptions.innerHTML = '';
+      qAfter.innerHTML = '';
+      qFree.style.display = 'none';
+
+      // ===== 选择型 =====
+      if (s.type === 'choice') {
+        qOptions.style.display = 'flex';
+        s.options.forEach((o, i) => {
+          const b = document.createElement('button');
+          b.setAttribute('aria-selected', spec[s.key] === o.v ? 'true' : 'false');
+          b.innerHTML = `<span>${o.star ? '<span class="star">⭐</span>' : ''}${o.v}</span><span class="key">${String.fromCharCode(65 + i)}</span>`;
+          b.onclick = () => {
+            spec[s.key] = o.v;
+            qOptions.querySelectorAll('button').forEach((bb) => bb.setAttribute('aria-selected', 'false'));
+            b.setAttribute('aria-selected', 'true');
+            $('#q-free-input').value = '';
+            renderAfter(s);
+            updateNext();
+          };
+          qOptions.appendChild(b);
+        });
+        if (s.allowFree) {
+          qFree.style.display = 'block';
+          const inp = $('#q-free-input');
+          inp.placeholder = s.allowFree;
+          inp.value = (s.options.find((o) => o.v === spec[s.key]) ? '' : (spec[s.key] || ''));
+          inp.oninput = () => {
+            if (inp.value.trim()) {
+              spec[s.key] = inp.value.trim();
+              qOptions.querySelectorAll('button').forEach((bb) => bb.setAttribute('aria-selected', 'false'));
+              renderAfter(s);
+            }
+            updateNext();
+          };
+          inp.onkeydown = (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); doNext(); }
+          };
+        }
+      }
+      // ===== 自由文本 =====
+      else if (s.type === 'free') {
+        qOptions.style.display = 'none';
+        qFree.style.display = 'block';
+        const inp = $('#q-free-input');
+        inp.placeholder = s.placeholder || '';
+        inp.value = spec[s.key] || '';
+        inp.oninput = () => { spec[s.key] = inp.value.trim(); updateNext(); };
+        inp.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); doNext(); } };
+        setTimeout(() => inp.focus(), 100);
+      }
+      // ===== 数字 =====
+      else if (s.type === 'number') {
+        qOptions.style.display = 'none';
+        const cur = spec[s.key] || s.defaultVal;
+        spec[s.key] = cur;
+        const html = `
+          <div style="display:flex; align-items:center; gap: 24px; justify-content: center; padding: var(--s-5) 0;" class="mincho">
+            <button id="nbm" style="width:36px;height:36px;border:1px solid var(--paper-edge);font-size:18px;">−</button>
+            <span id="nbn" style="font-size:48px;letter-spacing:0.06em;min-width:80px;text-align:center;color:var(--ink);">${cur}</span>
+            <button id="nbp" style="width:36px;height:36px;border:1px solid var(--paper-edge);font-size:18px;">+</button>
+          </div>
+          <div style="text-align:center;font-family:var(--font-mincho);font-size:13px;color:var(--ink-faint);letter-spacing:0.08em;" id="nbhint"></div>
+        `;
+        qAfter.innerHTML = html;
+        const update = () => {
+          const v = spec[s.key];
+          $('#nbn').textContent = v;
+          let cat = '短篇';
+          if (v > 8 && v <= 18) cat = '中篇';
+          else if (v > 18 && v <= 30) cat = '长篇';
+          else if (v > 30) cat = '巨制';
+          $('#nbhint').innerHTML = `${cat} · 约 ${(v * 0.4).toFixed(1)} 万字`;
+        };
+        update();
+        $('#nbm').onclick = () => { spec[s.key] = Math.max(s.min, spec[s.key] - 1); update(); };
+        $('#nbp').onclick = () => { spec[s.key] = Math.min(s.max, spec[s.key] + 1); update(); };
+      }
+
+      // 追问（after）
+      renderAfter(s);
+      updateNext();
+
+      skip.style.display = s.skippable ? 'block' : 'none';
+      skip.onclick = () => { delete spec[s.key]; step++; render(); };
+    }
+
+    function renderAfter(s) {
+      const qAfter = $('#q-after');
+      if (!s.after) { if (s.type === 'number') return; qAfter.innerHTML = ''; return; }
+      if (!spec[s.key]) { qAfter.innerHTML = ''; return; }
+      qAfter.innerHTML = `
+        <div style="margin-top: var(--s-6); padding-top: var(--s-4); border-top: 1px solid var(--paper-edge);">
+          <p class="onboard-sub" style="margin: 0 0 var(--s-3);">${s.after.prompt}</p>
+          <input id="after-input" class="field" placeholder="${s.after.placeholder || ''}" value="${spec[s.after.key] || ''}">
+        </div>
+      `;
+      const inp = $('#after-input');
+      inp.oninput = () => { spec[s.after.key] = inp.value.trim(); updateNext(); };
+      inp.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); doNext(); } };
+    }
+
+    function updateNext() {
+      const s = STEPS[step];
+      if (!s) return;
+      let canNext = false;
+      if (s.type === 'number') canNext = true;
+      else if (s.skippable) canNext = true;
+      else canNext = !!spec[s.key];
+      $('#btn-next').disabled = !canNext;
+      $('#btn-next').textContent = step === STEPS.length - 1 ? '生 成 标 题 →' : '下 一 题 →';
+    }
+
+    function doNext() {
+      if ($('#btn-next').disabled) return;
+      vibrate('tap');
+      step++;
+      render();
+    }
+    $('#btn-next').onclick = doNext;
+    $('#btn-back').onclick = () => {
+      vibrate('tap');
+      if (step === 0) { location.href = 'library.html'; return; }
+      step--;
+      render();
+    };
+
+    // ===== 标题选择步骤 =====
+    async function renderTitleStep() {
+      $('#progress').innerHTML = `立 项 · 标 题 <span class="now">${STEPS.length + 1}</span> / ${STEPS.length + 1}`;
+      $('#q-prompt').textContent = '为这部小说起一个名字';
+      $('#q-sub').textContent = '由 AI 基于你刚才的设定生成候选——选一个，或自己写一个。';
+      $('#q-options').innerHTML = '';
+      $('#q-options').style.display = 'none';
+      $('#q-free').style.display = 'none';
+      $('#btn-skip').style.display = 'none';
+      $('#btn-next').disabled = true;
+      $('#btn-next').textContent = '生 成 大 纲 →';
+
+      const after = $('#q-after');
+      after.innerHTML = `<div class="ai-banner"><span class="glyph"></span><span>AI 正在为你拟标题——稍候</span></div>`;
+      try {
+        const reply = await chat(titlesPrompt(spec), { temperature: 1, jsonMode: true });
+        const parsed = parseJson(reply) || {};
+        titleCandidates = (parsed.titles || []).slice(0, 8);
+      } catch (e) {
+        after.innerHTML = `<div class="ai-banner error"><span class="glyph"></span><span>AI 调用失败：${e.message}</span></div>
+          <div style="margin-top: var(--s-4);">
+            <input id="manual-title" class="field" placeholder="无 AI，也可以自己起一个">
+          </div>`;
+        $('#manual-title').oninput = (e) => {
+          selectedTitle = e.target.value.trim();
+          $('#btn-next').disabled = !selectedTitle;
+        };
+        return;
+      }
+
+      const html = `
+        <div class="ai-banner done"><span class="glyph"></span><span>选一个 · 或自己写一个</span></div>
+        <div class="title-cards" id="t-cards">
+          ${titleCandidates.map((t, i) => `<div class="t-card" data-i="${i}"><span>《${t}》</span><span class="seq">${String.fromCharCode(65 + i)}</span></div>`).join('')}
+        </div>
+        <div style="margin-top: var(--s-4);">
+          <input id="manual-title" class="field" placeholder="或者，自己写一个标题（无书名号）">
+        </div>
+      `;
+      after.innerHTML = html;
+      const cards = $$('.t-card', after);
+      cards.forEach((c) => {
+        c.onclick = () => {
+          cards.forEach((cc) => cc.setAttribute('aria-selected', 'false'));
+          c.setAttribute('aria-selected', 'true');
+          selectedTitle = titleCandidates[+c.dataset.i];
+          $('#manual-title').value = '';
+          $('#btn-next').disabled = false;
+        };
+      });
+      $('#manual-title').oninput = (e) => {
+        cards.forEach((cc) => cc.setAttribute('aria-selected', 'false'));
+        selectedTitle = e.target.value.trim();
+        $('#btn-next').disabled = !selectedTitle;
+      };
+
+      $('#btn-next').onclick = createAndGo;
+    }
+
+    async function createAndGo() {
+      if (!selectedTitle) return;
+      vibrate('start');
+      $('#btn-next').disabled = true;
+      $('#btn-next').textContent = '正 在 生 成 概 述 …';
+
+      let logline = '', synopsis = '';
+      try {
+        const reply = await chat(loglinePrompt({ ...spec, title: selectedTitle }), { temperature: 0.7, jsonMode: true });
+        const parsed = parseJson(reply) || {};
+        logline = parsed.logline || '';
+        synopsis = parsed.synopsis || '';
+      } catch (e) {
+        toast('AI 生成概述失败：' + e.message, 'error');
+        vibrate('warn');
+        // 不阻塞——可以继续
+      }
+
+      const novel = createNovel({
+        title: selectedTitle,
+        spec: { ...spec, logline, synopsis },
+        status: 'planning',
+        chapters: [],
+        outline: [],
+        characters: [],
+        currentChapter: 1,
+        mode: getPrefs().defaultMode,
+      });
+      vibrate('done');
+      location.href = `plan.html?novel=${novel.id}`;
+    }
+
+    render();
+  </script>
+</body>
+</html>

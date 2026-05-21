@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>诵读 · 文舒</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/app.css">
+<script src="../cordova.js"></script>
+<script src="../js/boot.js"></script>
+<style>
+  html, body { width: 100%; min-height: 100%; }
+  body { background: var(--paper); }
+  .reader { padding-bottom: 96px; }
+
+  .toc-mask {
+    position: fixed; inset: 0;
+    background: rgba(28, 26, 22, 0.4);
+    z-index: 40;
+    display: none;
+  }
+  .toc-mask.open { display: block; }
+  .toc-drawer {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: min(360px, 86vw);
+    background: var(--paper);
+    z-index: 41;
+    transform: translateX(100%);
+    transition: transform .25s ease;
+    overflow-y: auto;
+    padding: var(--s-6) var(--s-5);
+    box-shadow: -1px 0 0 var(--paper-edge);
+  }
+  .toc-drawer.open { transform: translateX(0); }
+  .toc-drawer h3 {
+    font-family: var(--font-mincho);
+    font-size: 18px;
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    margin: 0 0 var(--s-5);
+    padding-bottom: var(--s-3);
+    border-bottom: 1px solid var(--paper-edge);
+  }
+  .toc-row {
+    display: grid; grid-template-columns: 38px 1fr 64px;
+    gap: 12px;
+    padding: 10px 0;
+    cursor: pointer;
+    align-items: baseline;
+  }
+  .toc-row:hover { background: var(--paper-deep); }
+  .toc-row .num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--ink-ghost);
+  }
+  .toc-row .ti {
+    font-family: var(--font-mincho);
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .toc-row .ti .ev { display: block; font-size: 12px; color: var(--ink-faint); margin-top: 2px; letter-spacing: 0.02em; }
+  .toc-row .wc {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: var(--ink-ghost);
+    text-align: right;
+  }
+  .toc-row.current { color: var(--vermilion); }
+  .toc-row.current .num, .toc-row.current .ti, .toc-row.current .wc { color: var(--vermilion); }
+  .toc-row.pending .ti { color: var(--ink-ghost); }
+
+  .font-toggle {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; gap: 8px;
+    z-index: 5;
+  }
+  .font-toggle button {
+    width: 36px; height: 36px;
+    background: var(--paper);
+    border: 1px solid var(--paper-edge);
+    border-radius: 50%;
+    color: var(--ink-ghost);
+    font-family: var(--font-mincho);
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .font-toggle button:hover { color: var(--ink); border-color: var(--ink); }
+  .font-toggle .a { font-size: 12px; }
+  .font-toggle .A { font-size: 16px; }
+</style>
+</head>
+<body>
+  <a class="ghost tl" href="library.html" data-back-fallback="library.html" aria-label="返回书房">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
+      <path d="M8.5 2.5L4 7l4.5 4.5"/>
+    </svg>
+  </a>
+  <a class="ghost tr" href="#" id="toc-trigger" aria-label="目录">
+    <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.2" fill="none">
+      <path d="M2 3.5h10M2 7h10M2 10.5h6"/>
+    </svg>
+  </a>
+
+  <article class="reader" id="reader">
+    <div class="kicker" id="kicker">载 入 中</div>
+    <h1 id="title">…</h1>
+    <div class="byline" id="byline"></div>
+
+    <div id="body-render"></div>
+
+    <p class="signature" id="signature" style="display:none;">
+      <span id="hook-line"></span>
+      <span class="seal sm" id="seal"></span>
+    </p>
+  </article>
+
+  <nav class="ch-nav" id="ch-nav"></nav>
+
+  <div class="font-toggle">
+    <button class="a" id="font-down" aria-label="缩小">小</button>
+    <button class="A" id="font-up" aria-label="放大">大</button>
+  </div>
+
+  <div class="toc-mask" id="toc-mask"></div>
+  <aside class="toc-drawer" id="toc-drawer">
+    <h3 id="toc-title">目 录</h3>
+    <div id="toc-list"></div>
+  </aside>
+
+  <script type="module">
+    import { getNovel, getChapter, getPrefs, setPrefs } from '../js/store.js';
+    import { $, $$, urlParam, chCn, cnWordCount, vibrate, bindGlobalTapVibration, bindBackButtons } from '../js/utils.js';
+
+    bindGlobalTapVibration();
+    bindBackButtons();
+
+    const novelId = urlParam('novel');
+    const novel = novelId ? getNovel(novelId) : null;
+
+    if (!novel) {
+      document.querySelector('.reader').innerHTML = `
+        <div class="empty-state">
+          <div class="glyph mincho">空</div>
+          <p class="hint">没有找到这部小说。</p>
+          <a class="btn-quiet" href="library.html">回 到 书 房</a>
+        </div>`;
+      throw new Error('no novel');
+    }
+
+    // 默认章号：URL → 第一个有正文的章 → 1
+    const requested = parseInt(urlParam('ch') || '0', 10);
+    const written = (novel.chapters || []).filter((c) => c.body);
+    let chN = requested || written[0]?.n || 1;
+    let chapter = getChapter(novel.id, chN);
+    if (!chapter || !chapter.body) {
+      // 找第一个有正文的章
+      const found = written[0];
+      if (found) { chN = found.n; chapter = found; }
+    }
+
+    document.title = `${novel.title} · 诵读`;
+
+    function renderHeader() {
+      $('#kicker').textContent = `${novel.title} · 第 ${chCn(chN)} 章`;
+      $('#title').textContent = chapter?.title || `第${chN}章`;
+      const wc = chapter?.wordCount || cnWordCount(chapter?.body || '');
+      const verdict = chapter?.scored?.verdict;
+      const status = chapter?.status === 'completed' ? '· 已 封 缄' : (verdict === 'pass' ? '· 已 校 验' : '');
+      $('#byline').textContent = `字数 ${wc.toLocaleString()} ${status}`;
+    }
+
+    function mdToHtml(md) {
+      if (!md) return '<p class="meta">本章尚未落笔。</p>';
+      const blocks = md.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+      return blocks.map((b) => {
+        if (b.startsWith('> ')) {
+          // 引子放在文章中间用 blockquote
+          const inner = b.replace(/^>\s?/gm, '').trim();
+          return `<blockquote>${inner.replace(/\n/g, '<br>')}</blockquote>`;
+        }
+        if (b.startsWith('## ')) return `<h2>${b.slice(3)}</h2>`;
+        if (b.startsWith('# ')) return `<h1>${b.slice(2)}</h1>`;
+        return `<p>${b.replace(/\n/g, '<br>')}</p>`;
+      }).join('');
+    }
+
+    function renderBody() {
+      $('#body-render').innerHTML = mdToHtml(chapter?.body || '');
+      if (chapter?.hook) {
+        $('#signature').style.display = 'flex';
+        $('#hook-line').textContent = `○ 章 末 钩 · ${chapter.hook}`;
+        $('#seal').textContent = chCn(chN);
+      } else {
+        $('#signature').style.display = 'none';
+      }
+    }
+
+    function renderNav() {
+      const total = novel.outline?.length || novel.chapters?.length || 0;
+      const prev = novel.chapters?.find((c) => c.n === chN - 1);
+      const next = novel.chapters?.find((c) => c.n === chN + 1);
+      const prevHasBody = prev?.body;
+      const nextHasBody = next?.body;
+      const prevTitle = prev?.title || novel.outline?.find((o) => o.n === chN - 1)?.title || '';
+      const nextTitle = next?.title || novel.outline?.find((o) => o.n === chN + 1)?.title || '';
+
+      const html = `
+        ${chN > 1 ?
+          `<a href="reader.html?novel=${novel.id}&ch=${chN - 1}" style="color: ${prevHasBody ? 'var(--ink-faint)' : 'var(--ink-ghost)'};text-decoration:none;">← 第 ${String(chN - 1).padStart(2, '0')} 章 · ${prevTitle}${prevHasBody ? '' : ' · 未 写'}</a>` :
+          `<span style="color: var(--ink-ghost); opacity: 0.4;">— 已 是 首 章 —</span>`
+        }
+        <span class="now">${String(chN).padStart(2, '0')} / ${String(total).padStart(2, '0')}</span>
+        ${chN < total ?
+          (nextHasBody ?
+            `<a href="reader.html?novel=${novel.id}&ch=${chN + 1}" style="color: var(--ink-faint); text-decoration: none;">第 ${String(chN + 1).padStart(2, '0')} 章 · ${nextTitle} →</a>` :
+            `<a href="editor.html?novel=${novel.id}&ch=${chN + 1}" style="color: var(--vermilion); text-decoration: none;">第 ${String(chN + 1).padStart(2, '0')} 章 · ${nextTitle} · 写 作 中 →</a>`
+          ) :
+          `<span style="color: var(--ink-ghost); opacity: 0.4;">— 已 至 卷 末 —</span>`
+        }
+      `;
+      $('#ch-nav').innerHTML = html;
+    }
+
+    function renderToc() {
+      $('#toc-title').textContent = `《${novel.title}》目 录`;
+      const items = novel.outline?.length ? novel.outline : (novel.chapters || []);
+      const html = items.map((r) => {
+        const ch = getChapter(novel.id, r.n);
+        const wc = ch?.wordCount || 0;
+        const hasBody = ch?.body && wc > 100;
+        const status = ch?.status === 'completed' ? '已封缄' : (hasBody ? `${wc}字` : '未写');
+        return `
+          <div class="toc-row ${r.n === chN ? 'current' : ''} ${hasBody ? '' : 'pending'}" data-n="${r.n}" ${hasBody ? '' : `data-pending="1"`}>
+            <span class="num">${String(r.n).padStart(2, '0')}</span>
+            <span class="ti">${r.title || ch?.title || '未命名'}
+              ${r.event ? `<span class="ev">${r.event}</span>` : ''}
+            </span>
+            <span class="wc">${status}</span>
+          </div>`;
+      }).join('');
+      $('#toc-list').innerHTML = html;
+      $$('#toc-list .toc-row').forEach((row) => {
+        row.onclick = () => {
+          const n = +row.dataset.n;
+          if (row.dataset.pending) {
+            location.href = `editor.html?novel=${novel.id}&ch=${n}`;
+          } else {
+            chN = n;
+            chapter = getChapter(novel.id, chN);
+            renderAll();
+            closeToc();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        };
+      });
+    }
+
+    function renderAll() {
+      renderHeader();
+      renderBody();
+      renderNav();
+      renderToc();
+      history.replaceState(null, '', `reader.html?novel=${novel.id}&ch=${chN}`);
+      applyFontSize();
+    }
+
+    // 目录开关
+    function openToc() {
+      $('#toc-mask').classList.add('open');
+      $('#toc-drawer').classList.add('open');
+    }
+    function closeToc() {
+      $('#toc-mask').classList.remove('open');
+      $('#toc-drawer').classList.remove('open');
+    }
+    $('#toc-trigger').onclick = (e) => { e.preventDefault(); vibrate('tap'); openToc(); };
+    $('#toc-mask').onclick = closeToc;
+
+    // 字号
+    function applyFontSize() {
+      const fs = getPrefs().fontSize || 15;
+      document.documentElement.style.setProperty('--reader-font-size', fs + 'px');
+      const body = $('#body-render');
+      if (body) body.style.fontSize = fs + 'px';
+    }
+    $('#font-up').onclick = () => {
+      vibrate('tap');
+      const fs = Math.min(20, (getPrefs().fontSize || 15) + 1);
+      setPrefs({ fontSize: fs });
+      applyFontSize();
+    };
+    $('#font-down').onclick = () => {
+      vibrate('tap');
+      const fs = Math.max(12, (getPrefs().fontSize || 15) - 1);
+      setPrefs({ fontSize: fs });
+      applyFontSize();
+    };
+
+    // 键盘左右切章
+    document.addEventListener('keydown', (e) => {
+      if ($('#toc-drawer').classList.contains('open')) return;
+      const total = novel.outline?.length || 0;
+      if (e.key === 'ArrowLeft' && chN > 1) location.href = `reader.html?novel=${novel.id}&ch=${chN - 1}`;
+      if (e.key === 'ArrowRight' && chN < total) {
+        const next = novel.chapters?.find((c) => c.n === chN + 1);
+        location.href = next?.body ? `reader.html?novel=${novel.id}&ch=${chN + 1}` : `editor.html?novel=${novel.id}&ch=${chN + 1}`;
+      }
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
