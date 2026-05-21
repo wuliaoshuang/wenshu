@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f8f1e8">
   <title>文舒 · AI 小说工坊</title>
-  <meta name="description" content="文舒是一座替你听落笔声音的 AI 小说工坊，从灵感、角色卡、角色扮演接戏到章节生成，陪你把故事写出来。">
+  <meta name="description" content="文舒是一座替中文创作者准备的 AI 小说工坊：捕捉灵感、管理角色卡、角色扮演接戏、Agent 构建大纲、流式写章节，并把作品留在本地。">
   <meta property="og:title" content="文舒 · AI 小说工坊">
-  <meta property="og:description" content="说话就行。文舒陪你把小说从闪念写成章节。">
+  <meta property="og:description" content="把一句闪念，养成一部长篇。">
   <meta property="og:type" content="website">
   <meta property="og:image" content="assets/wenshu_icon.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
@@ -17,8 +17,8 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="grid-field" aria-hidden="true"></div>
-  <div class="ink-orbit" aria-hidden="true"></div>
+  <div class="paper-grid" aria-hidden="true"></div>
+  <div class="ink-scan" aria-hidden="true"></div>
 
   <header class="site-nav">
     <a class="brand" href="#top" aria-label="文舒首页">
@@ -26,111 +26,138 @@
       <span>文 舒</span>
     </a>
     <nav aria-label="页面导航">
-      <a href="#flow">流程</a>
+      <a href="#studio">工坊</a>
       <a href="#roleplay">角色扮演</a>
+      <a href="#privacy">本地</a>
       <a href="#download">体验</a>
     </nav>
   </header>
 
   <main id="top">
     <section class="hero">
+      <div class="hero-mark" aria-hidden="true">
+        <span>文</span>
+        <span>舒</span>
+      </div>
       <div class="hero-copy">
-        <p class="eyebrow">WENSHU · AI NOVEL STUDIO</p>
+        <p class="eyebrow">WENSHU · AI NOVEL OPERATING DESK</p>
         <h1>把一句闪念，养成一部长篇。</h1>
-        <p class="lead">文舒把灵感捕捉、角色卡、角色扮演接戏、Agent 规划、章节生成、附件参考和本地书房放进同一张纸面。你只需要开口，故事会自己长出骨架。</p>
+        <p class="lead">文舒不是一个单薄聊天框，而是一张能工作的纸：捕风记灵感，墨小捋结构，角色卡戴面具，角色扮演直接接戏，章节流式落笔，最后进书房、可读、可改、可导出。</p>
         <div class="hero-actions">
-          <a class="seal-btn" href="../www/html/index.html">在线体验</a>
-          <a class="paper-link" href="#download">下载 APK</a>
-          <a class="ghost-link" href="#flow">看看它怎么写</a>
+          <a class="seal-btn" href="../www/html/index.html">打开 Web 版</a>
+          <a class="paper-link" href="#studio">看工坊能力</a>
+          <a class="ghost-link" href="https://github.com/wuliaoshuang/wenshu" rel="noopener">GitHub</a>
         </div>
       </div>
 
-      <div class="artifact" aria-label="文舒应用预览">
-        <div class="phone">
-          <div class="phone-top"></div>
-          <div class="screen">
-            <div class="chat-line ai">你想写怎样的第一幕？</div>
-            <div class="chat-line user">一个雨夜，角色误入旧剧院。</div>
-            <div class="qcard">
-              <span>墨小正在拆解</span>
-              <b>题材 · 冲突 · 角色欲望</b>
-            </div>
-            <div class="chapter">
-              <small>CHAPTER 01</small>
-              <p>雨声像一层薄幕，从剧院坍塌的穹顶上垂下来。</p>
-            </div>
+      <div class="hero-console" aria-label="文舒能力预览">
+        <div class="console-top">
+          <span>墨小 · Agent</span>
+          <b>deepseek-v4-pro</b>
+        </div>
+        <div class="console-body">
+          <div class="line user">我想写一部旧剧院、雨夜、失踪演员相关的长篇。</div>
+          <div class="line ai">先锁定题材、核心欲望和第一幕钩子。你要悬疑、奇幻，还是情感向？</div>
+          <div class="qcard">
+            <small>Q-CARD</small>
+            <strong>题材 / 人物关系 / 章节规模</strong>
+            <span>用户选择后再推进，不默认调用模型。</span>
+          </div>
+          <div class="stream">
+            <small>STREAMING CHAPTER</small>
+            <p>雨声像一层薄幕，从剧院坍塌的穹顶上垂下来。她站在舞台边缘，听见帷幕后有人轻轻念出了自己的名字。</p>
           </div>
         </div>
-        <div class="stamp">墨<br>小</div>
       </div>
     </section>
 
-    <section class="proof-strip" aria-label="能力概览">
-      <div><b>本地持久化</b><span>会话、作品、角色卡与偏好都留在设备上</span></div>
-      <div><b>流式生成</b><span>章节正文与角色扮演接话逐字出现</span></div>
-      <div><b>DeepSeek Pro</b><span>支持思考模式，默认折叠不打扰</span></div>
+    <section class="metrics" aria-label="核心能力">
+      <div><b>8</b><span>条创作主线：捕风、立项、Agent、角色卡、角色扮演、编辑、阅读、导出</span></div>
+      <div><b>0</b><span>自建服务器：内容、API Key、偏好和角色都优先留在本地</span></div>
+      <div><b>2</b><span>种模式：结构化构建一本书，或直接沉浸式接戏</span></div>
     </section>
 
-    <section id="flow" class="flow section">
+    <section id="studio" class="section studio">
       <div class="section-head">
-        <p class="eyebrow">WORKFLOW</p>
-        <h2>不是聊天框，是一间写作工坊。</h2>
+        <p class="eyebrow">THE WORKSHOP</p>
+        <h2>从闪念到成书，不让创作断在工具切换里。</h2>
       </div>
-      <div class="steps">
+      <div class="feature-grid">
         <article>
-          <span>01</span>
-          <h3>收集闪念</h3>
-          <p>对白、画面、伏笔、修订念头先丢进捕风页，等你回到书房再整理。</p>
+          <span>捕风</span>
+          <h3>灵感先落纸</h3>
+          <p>对白、画面、伏笔、修订念头可以先记下，不必立刻整理成完整设定。路上的一句话，回到书房还能接住。</p>
         </article>
         <article>
-          <span>02</span>
-          <h3>Agent 捋清故事</h3>
-          <p>墨小会追问题材、人物关系、章节规模，也能直接生成标题、大纲、人物和细纲。</p>
+          <span>墨小</span>
+          <h3>Agent 构建</h3>
+          <p>不默认乱跑模型。用户手动触发后，墨小会用 Q-Card 追问、确认、生成标题、大纲、人物、细纲和章节。</p>
         </article>
         <article>
-          <span>03</span>
-          <h3>入库成书</h3>
-          <p>规划结果一键进入书房，后续按章节续写、阅读、导出。</p>
+          <span>章节</span>
+          <h3>流式落笔</h3>
+          <p>章节不是一瞬间砸出来，而是逐字出现。DeepSeek Pro 的思考内容显示在气泡顶部，默认折叠。</p>
+        </article>
+        <article>
+          <span>书房</span>
+          <h3>本地作品库</h3>
+          <p>Agent 沙盒可以显式“采用入库”，进入正式书房。章节、摘要、状态、闪念都在同一套本地存档里。</p>
+        </article>
+        <article>
+          <span>附件</span>
+          <h3>参考材料进上下文</h3>
+          <p>MD、TXT、DOC、DOCX 可以作为资料喂给当前会话，用来保持世界观、设定文档和历史章节一致。</p>
+        </article>
+        <article>
+          <span>导出</span>
+          <h3>写完带得走</h3>
+          <p>作品可以导出 Markdown、TXT、JSON。文舒是工坊，不是锁住稿子的仓库。</p>
         </article>
       </div>
     </section>
 
     <section id="roleplay" class="roleplay section">
-      <div class="role-card">
+      <div class="roleplay-copy">
         <p class="eyebrow">ROLEPLAY MODE</p>
-        <h2>角色扮演，不弹卡，不打断。</h2>
-        <p>打开角色扮演模式后，文舒会跳过箱庭式规划，直接依据 AI 角色卡和全局用户角色接戏。摄像机视角、旁白、动作、内心这些导演指令，会被识别成写作操作，而不是角色台词。</p>
+        <h2>角色扮演是另一张分页：不规划，不弹卡，只接戏。</h2>
+        <p>打开角色扮演后，它不和 Q-Card 构建流共享消息。AI 角色可以随时切换，“我的角色”是全局身份；对方说话逐字流式输出，导演指令会被理解为镜头、动作、画面和内心调度。</p>
       </div>
-      <div class="command-board">
-        <span>{摄像机视角：正面到侧面}</span>
-        <span>{描写画面}</span>
-        <span>{推进剧情}</span>
-        <span>{内心：}</span>
+      <div class="director-board">
+        <div><b>{摄像机视角：}</b><span>正面到侧面观测，改写角色当前状态，而不是让角色对镜头说话。</span></div>
+        <div><b>{描写画面}</b><span>扩写场景、动作、光线和距离感，保持角色设定。</span></div>
+        <div><b>{推进剧情}</b><span>让当前冲突往前走一步，不突然跳场，不替用户决定结局。</span></div>
+        <div><b>[sys] 存档</b><span>系统级操作不被角色感知，读档后继续扮演。</span></div>
       </div>
     </section>
 
-    <section class="features section">
-      <div class="feature">
-        <h3>角色卡工坊</h3>
-        <p>AI 角色可随时切换；我的角色是全局身份，所有角色扮演会话共享。也支持 JSON 导入和 AI 辅助补全。</p>
+    <section class="section pipeline">
+      <div class="section-head">
+        <p class="eyebrow">HOW IT MOVES</p>
+        <h2>创作流程被拆成能反悔的步骤。</h2>
       </div>
-      <div class="feature">
-        <h3>两条创作通道</h3>
-        <p>Agent 构建负责标题、大纲、人物、章节；角色扮演负责沉浸接戏，不规划、不弹卡、不抢戏。</p>
+      <ol class="timeline">
+        <li><span>01</span><b>开一个念头</b><p>从一句话、一张角色卡、一个场景或一段附件开始。</p></li>
+        <li><span>02</span><b>选择通道</b><p>要写书就进 Agent 构建；要沉浸互动就开角色扮演。</p></li>
+        <li><span>03</span><b>确认后再生成</b><p>标题、大纲、人物、章节都由用户显式触发，不偷偷调用模型。</p></li>
+        <li><span>04</span><b>进书房修订</b><p>章节可续写、重写、阅读、导出；闪念和设定也能继续追加。</p></li>
+      </ol>
+    </section>
+
+    <section id="privacy" class="section privacy">
+      <div>
+        <p class="eyebrow">LOCAL FIRST</p>
+        <h2>你的稿子不该被工具拿走。</h2>
       </div>
-      <div class="feature">
-        <h3>提示词与附件</h3>
-        <p>全局提示词会进入模型调用；MD、TXT、DOC/DOCX 可作为参考材料加入当前创作上下文。</p>
-      </div>
+      <p>文舒没有自建后端。小说、角色卡、会话、API Key、全局提示词和偏好都保存在本机 localStorage。AI 请求由浏览器直连 DeepSeek，费用走你自己的 Key。清掉本地数据，就是彻底清掉。</p>
     </section>
 
     <section id="download" class="download section">
-      <p class="eyebrow">LOCAL WEB APP · ANDROID DEBUG BUILD</p>
-      <h2>先打开本地 Web 版，再把文舒装进手机。</h2>
-      <p>本地 Web 版已经可直接体验；当前 Android 版本 <b>5.12</b>，适合愿意一起打磨体验的创作者。</p>
+      <p class="eyebrow">VERSION 5.12</p>
+      <h2>现在打开本地 Web 版，或者把它装进手机。</h2>
+      <p>落地页只用于 Vercel 展示，不参与 APK 打包。真正的应用入口在 <code>www/html/index.html</code>，Cordova 打包仍只使用 <code>www/</code>。</p>
       <div class="download-actions">
         <a class="seal-btn" href="../www/html/index.html">打开 Web 版</a>
-        <a class="paper-link" href="https://github.com/wuliaoshuang/wenshu" rel="noopener">前往 GitHub</a>
+        <a class="paper-link" href="https://github.com/wuliaoshuang/wenshu" rel="noopener">查看源码</a>
       </div>
     </section>
   </main>

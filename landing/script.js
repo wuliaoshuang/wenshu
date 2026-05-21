@@ -1,4 +1,6 @@
-const revealTargets = document.querySelectorAll('.steps article, .feature, .role-card, .command-board, .download');
+const revealTargets = document.querySelectorAll(
+  '.feature-grid article, .roleplay-copy, .director-board, .timeline, .privacy, .download'
+);
 
 const observer = new IntersectionObserver((entries) => {
   for (const entry of entries) {
