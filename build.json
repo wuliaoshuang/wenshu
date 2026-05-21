@@ -1,0 +1,15 @@
+{
+  "ios": {
+    "debug": {
+      "codeSignIdentity": "Apple Development",
+      "developmentTeam": "K2S58422U2",
+      "packageType": "development",
+      "automaticProvisioning": true
+    },
+    "release": {
+      "developmentTeam": "K2S58422U2",
+      "packageType": "app-store",
+      "automaticProvisioning": true
+    }
+  }
+}

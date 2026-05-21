@@ -1,0 +1,1604 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>墨小 · Agent</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/app.css">
+<script src="../cordova.js"></script>
+<script src="../js/boot.js"></script>
+</head>
+<body class="agent-mode">
+  <button class="ghost tl" id="open-drawer" type="button" aria-label="会话列表">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 6h18M3 12h18M3 18h18"/>
+    </svg>
+  </button>
+  <div class="ghost-group tr">
+    <a class="ghost" href="role-cards.html" aria-label="我的角色卡">
+      <img class="mask-icon" src="../assets/icons8-mask.svg" alt="">
+    </a>
+    <a class="ghost" href="settings.html" aria-label="设置">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+      </svg>
+    </a>
+  </div>
+
+  <main class="chat-screen" id="chat-screen" hidden>
+    <header class="chat-header">
+      <div class="chat-topbar">
+        <span class="chat-corner-slot" aria-hidden="true"></span>
+        <h1>墨 小 · Agent</h1>
+        <span class="chat-corner-slot" aria-hidden="true"></span>
+      </div>
+      <p class="chat-stage" id="chat-stage">说话就行 · 我会陪你把小说一点点捋出来</p>
+      <div class="chat-modebar">
+        <button id="promote-btn" class="chat-promote" disabled title="把当前 Agent 工坊的成果复制成一本正式小说，进书房">采 用 入 库</button>
+        <button id="role-card-btn" class="role-card-open mask-switch" type="button" hidden>
+          <img class="mask-icon" src="../assets/icons8-mask.svg" alt="">
+          <span id="role-card-btn-label">未设置角色</span>
+        </button>
+        <label class="yc-switch" aria-label="切换纯语C模式">
+          <span>角色扮演</span>
+          <input id="yc-mode-btn" type="checkbox">
+          <i aria-hidden="true"></i>
+        </label>
+      </div>
+    </header>
+    <section class="chat-stream" id="stream"></section>
+    <button id="scroll-bottom-btn" class="scroll-bottom-btn" type="button" hidden aria-label="回到底部">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5v14M19 12l-7 7-7-7"/>
+      </svg>
+    </button>
+    <footer class="chat-input">
+      <div class="chat-tools">
+        <button class="chat-tool" id="model-switch-btn" type="button" aria-haspopup="listbox">
+          <span class="tool-icon" aria-hidden="true">⚙</span>
+          <span class="tool-label" id="model-switch-label">Flash</span>
+          <span class="tool-caret" aria-hidden="true">▾</span>
+        </button>
+        <button class="chat-tool" id="style-switch-btn" type="button" aria-haspopup="listbox">
+          <span class="tool-icon" aria-hidden="true">✦</span>
+          <span class="tool-label" id="style-switch-label">默 认 文 风</span>
+          <span class="tool-caret" aria-hidden="true">▾</span>
+        </button>
+        <span class="chat-tools-spacer"></span>
+        <button id="quick-prompt-btn" class="quick-prompt-btn" type="button" aria-label="快捷短语">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1"/>
+            <path d="M16 3h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-1"/>
+          </svg>
+        </button>
+      </div>
+      <div class="chat-input-row">
+        <button id="attach-file-btn" class="attach-file-btn" type="button" aria-label="上传附件">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+          </svg>
+        </button>
+        <input id="attach-file-input" type="file" accept=".md,.txt,.doc,.docx,text/markdown,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+        <textarea id="chat-input" rows="1" placeholder="想说点什么…（Enter 发送，Shift+Enter 换行）"></textarea>
+        <button id="chat-send">发送</button>
+      </div>
+    </footer>
+    <div id="model-pop" class="tool-pop" hidden>
+      <ul class="tool-pop-list" id="model-pop-list"></ul>
+    </div>
+    <div id="style-pop" class="tool-pop tool-pop-right" hidden>
+      <ul class="tool-pop-list" id="style-pop-list"></ul>
+    </div>
+    <div id="quick-prompt-pop" class="quick-prompt-pop" hidden>
+      <ul class="qp-list" id="qp-list"></ul>
+    </div>
+  </main>
+
+  <section class="chat-launch" id="chat-launch">
+    <div class="launch-hero">
+      <h1>墨 小 · Agent</h1>
+      <p>说话就行 · 我陪你把小说一点点捋出来</p>
+    </div>
+    <div class="launch-actions">
+      <button class="btn-primary" id="launch-new" type="button">+ 开 始 新 会 话</button>
+      <button class="btn-quiet" id="launch-open-drawer" type="button">查 看 历 史 会 话</button>
+      <a class="btn-quiet" href="index.html">回 文 舒 首 页</a>
+    </div>
+    <div class="launch-recent" id="launch-recent" hidden>
+      <h3>最 近 会 话</h3>
+      <ul id="launch-recent-list"></ul>
+    </div>
+  </section>
+
+  <div id="session-drawer" class="session-drawer" hidden aria-hidden="true">
+    <div class="sd-mask"></div>
+    <aside class="sd-panel">
+      <header class="sd-head">
+        <a href="index.html" class="sd-home" aria-label="返回首页">← 文 舒 首 页</a>
+        <button id="sd-new" class="sd-new" type="button">+ 新 会 话</button>
+      </header>
+      <ul id="sd-list" class="sd-list"></ul>
+    </aside>
+  </div>
+
+  <div id="role-card-modal" class="role-card-modal mask-select-modal" hidden aria-hidden="true">
+    <div class="role-card-mask"></div>
+    <section class="role-card-panel" role="dialog" aria-modal="true" aria-labelledby="role-card-title">
+      <header class="role-card-head">
+        <div>
+          <h2 id="role-card-title">选 择 面 具</h2>
+          <p id="role-card-subtitle">只切换 AI 角色；编写请去专用角色卡页</p>
+        </div>
+        <button id="role-card-close" class="role-card-close" type="button" aria-label="关闭">×</button>
+      </header>
+      <div id="role-card-picker" class="role-card-picker"></div>
+      <footer class="role-card-foot">
+        <a class="role-card-edit-link" href="role-cards.html">去 编 写 角 色 卡</a>
+        <button id="role-card-clear" type="button">不 戴 面 具</button>
+      </footer>
+    </section>
+  </div>
+
+  <script type="module">
+    import {
+      getAgentSession, createAgentSession, updateAgentSession,
+      upsertAgentChapter, appendAgentMessage, patchAgentMessage,
+      setAgentMicro, flushAgent, promoteAgentSession,
+      listAgentSessions, deleteAgentSession,
+      listAiRoleCards, getAiRoleCard, getUserRoleCard,
+    } from '../js/store.js';
+    import {
+      requireApiKey, vibrate, toast, urlParam, bindGlobalTapVibration, cnWordCount, confirmDialog, $,
+    } from '../js/utils.js';
+    import { chat, stream, parseJson } from '../js/deepseek.js';
+    import {
+      titlesPrompt, loglinePrompt, outlinePrompt, charactersPrompt,
+      microPrompt, chapterPrompt, summaryPrompt, ycChatPrompt, agentPlannerPrompt,
+    } from '../js/prompts.js';
+    import { STYLE_CARDS } from '../js/styles.js';
+    import {
+      normalizeRoleCard,
+      roleCardDisplayName, roleCardInitial,
+    } from '../js/role-card.js';
+
+    const MODELS = [
+      { id: 'deepseek-v4-flash', label: 'Flash', desc: '快 · 适合 Agent 对话' },
+      { id: 'deepseek-v4-pro',   label: 'Pro',   desc: '慢 · 章节正文用' },
+    ];
+
+    bindGlobalTapVibration();
+
+    // ===== 取 Agent Session（独立沙盒，跟 state.novels 完全隔离）=====
+    // 没拿到 session 不自动建——避免存储里堆一堆空壳，也不自动调模型烧钱。
+    // 无 session 时进入"启动屏"模式（见 §chat-launch），等用户手动操作。
+    let sessionId = urlParam('session');
+    let session = sessionId ? getAgentSession(sessionId) : null;
+    if (!sessionId || !session) sessionId = null;
+    // novel 是 session 的别名；无 session 时为 null，依赖它的代码都在 if (session) 守卫后跑
+    const novel = session;
+
+    window.addEventListener('pagehide', flushAgent);
+    window.addEventListener('beforeunload', flushAgent);
+
+    const $stream = $('#stream');
+    const $input = $('#chat-input');
+    const $send = $('#chat-send');
+    const $chatInputPanel = $('.chat-input');
+    const $scrollBottomBtn = $('#scroll-bottom-btn');
+    const $attachBtn = $('#attach-file-btn');
+    const $attachInput = $('#attach-file-input');
+    const $promote = $('#promote-btn');
+    const $hamburger = $('#open-drawer');
+    const $drawer = $('#session-drawer');
+    const $sdList = $('#sd-list');
+    const $sdNew = $('#sd-new');
+    const $qpBtn = $('#quick-prompt-btn');
+    const $qpPop = $('#quick-prompt-pop');
+    const $qpList = $('#qp-list');
+    const $chatScreen = $('#chat-screen');
+    const $chatLaunch = $('#chat-launch');
+    const $launchNew = $('#launch-new');
+    const $launchDrawer = $('#launch-open-drawer');
+    const $launchRecent = $('#launch-recent');
+    const $launchRecentList = $('#launch-recent-list');
+    const $modelBtn = $('#model-switch-btn');
+    const $modelLabel = $('#model-switch-label');
+    const $modelPop = $('#model-pop');
+    const $modelPopList = $('#model-pop-list');
+    const $styleBtn = $('#style-switch-btn');
+    const $styleLabel = $('#style-switch-label');
+    const $stylePop = $('#style-pop');
+    const $stylePopList = $('#style-pop-list');
+    const $ycModeBtn = $('#yc-mode-btn');
+    const $roleCardBtn = $('#role-card-btn');
+    const $roleCardBtnLabel = $('#role-card-btn-label');
+    const $roleCardModal = $('#role-card-modal');
+    const $roleCardSubtitle = $('#role-card-subtitle');
+    const $roleCardPicker = $('#role-card-picker');
+    const $roleCardClear = $('#role-card-clear');
+    const $roleCardClose = $('#role-card-close');
+
+    const QUICK_PROMPTS = [
+      { label: '()',           insert: '{动作：}' },
+      { label: '旁白',         insert: '{旁白：}' },
+      { label: 'OOC',          insert: '{OOC：}' },
+      { label: '内心',         insert: '{内心：}' },
+      { label: '摄像机视角',   insert: '{摄像机视角：}' },
+      { label: '描写画面',     insert: '{描写画面}' },
+      { label: '详细描写',     insert: '{详细描写}' },
+      { label: '继续',         insert: '{继续}' },
+      { label: '推进剧情',     insert: '{推进剧情}' },
+      { label: '时间流逝',     insert: '{时间流逝：}' },
+      { label: '加快节奏',     insert: '{加快节奏}' },
+      { label: '♡',            insert: '{亲密氛围：}' },
+      { label: '♡',            insert: '{情绪加深：}' },
+    ];
+
+    // ===== 「采用入库」：把当前 Agent 沙盒成果复制成一本正式 novel =====
+    // 启用条件：有 logline + 有大纲 + 至少一章正文 —— 否则入库进去是个空壳，不值
+    function refreshPromote() {
+      if (session?.ycMode) {
+        $promote.disabled = true;
+        return;
+      }
+      const ok = !!(novel.spec?.logline)
+        && Array.isArray(novel.outline) && novel.outline.length > 0
+        && (novel.chapters || []).some((c) => c.body && c.body.trim());
+      $promote.disabled = !ok;
+    }
+    $promote.addEventListener('click', async () => {
+      if ($promote.disabled || busy) return;
+      const ok = await confirmDialog(
+        '把当前工坊里的标题、大纲、人物、已写章节，复制成一本正式小说并进入书房？<br><br>原 Agent 会话保留，可继续聊、再次入库会建新的一本。',
+        { okLabel: '入 库', cancelLabel: '再 想 想' }
+      );
+      if (!ok) return;
+      flushAgent();
+      const created = promoteAgentSession(sessionId);
+      if (!created) { toast('入库失败：没找到会话', 'error'); vibrate('warn'); return; }
+      vibrate('done');
+      toast('已入库《' + created.title + '》', 'success');
+      setTimeout(() => { location.href = 'library.html'; }, 600);
+    });
+
+    // ===== 全局 busy 控制（思考中、生成中）=====
+    let busy = false;
+    function setBusy(b) {
+      busy = b;
+      $send.disabled = b;
+      $input.disabled = b;
+      $send.textContent = b ? '思 考' : '发 送';
+    }
+
+    // ===== 消息渲染 =====
+    let autoStickBottom = true;
+    function distanceFromBottom() {
+      return $stream.scrollHeight - $stream.scrollTop - $stream.clientHeight;
+    }
+    function refreshScrollBottomButton() {
+      if (!$scrollBottomBtn) return;
+      const show = distanceFromBottom() > 180;
+      $scrollBottomBtn.hidden = !show;
+      $scrollBottomBtn.classList.toggle('show', show);
+    }
+    function scrollToBottom() {
+      if (!autoStickBottom && distanceFromBottom() > 120) {
+        refreshScrollBottomButton();
+        return;
+      }
+      requestAnimationFrame(() => {
+        $stream.scrollTop = $stream.scrollHeight;
+        autoStickBottom = true;
+        refreshScrollBottomButton();
+      });
+    }
+    function updateInputDockMetrics() {
+      if (!$chatInputPanel) return;
+      const h = Math.ceil($chatInputPanel.getBoundingClientRect().height || 0);
+      document.documentElement.style.setProperty('--agent-input-h', `${h}px`);
+      refreshScrollBottomButton();
+    }
+
+    function renderMessage(msg) {
+      let el;
+      if (msg.kind === 'qcard') el = renderQCardDOM(msg);
+      else if (msg.kind === 'chapter') el = renderChapterBubbleDOM(msg);
+      else if (msg.kind === 'progress') el = renderProgressDOM(msg);
+      else el = renderBubbleDOM(msg);
+      el.dataset.msgId = msg.id;
+      if (msg.kind === 'chapter') el._chN = msg.chapterN;
+      $stream.appendChild(el);
+      return el;
+    }
+
+    function renderBubbleDOM(msg) {
+      if (isYcMode()) return renderYcBubbleDOM(msg);
+      const el = document.createElement('div');
+      el.className = 'bubble ' + (msg.role === 'user' ? 'user' : 'ai');
+      el.innerHTML = renderMd(msg.content || '');
+      if (msg.streaming) el.classList.add('streaming-caret');
+      if (msg.thinking) el.prepend(renderThinkingDOM(msg.thinking));
+      return el;
+    }
+
+    function renderYcBubbleDOM(msg) {
+      const wrap = document.createElement('div');
+      wrap.className = 'yc-line ' + (msg.role === 'user' ? 'user' : 'ai');
+      const avatar = document.createElement('div');
+      avatar.className = 'yc-avatar';
+      avatar.textContent = msg.role === 'user'
+        ? roleCardInitial(getUserRoleCard(), '我')
+        : roleCardInitial(session?.roleCard, '墨');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble ' + (msg.role === 'user' ? 'user' : 'ai');
+      bubble.innerHTML = renderMd(msg.content || '');
+      if (msg.streaming) bubble.classList.add('streaming-caret');
+      if (msg.thinking) bubble.prepend(renderThinkingDOM(msg.thinking));
+      if (msg.role === 'user') { wrap.appendChild(bubble); wrap.appendChild(avatar); }
+      else { wrap.appendChild(avatar); wrap.appendChild(bubble); }
+      return wrap;
+    }
+
+    function renderThinkingDOM(text, open = false) {
+      const details = document.createElement('details');
+      details.className = 'thinking-fold';
+      details.open = !!open;
+      const summary = document.createElement('summary');
+      summary.textContent = '思考';
+      const body = document.createElement('div');
+      body.className = 'thinking-body';
+      body.textContent = text || '已根据当前会话状态选择下一步。';
+      details.appendChild(summary);
+      details.appendChild(body);
+      return details;
+    }
+
+    function renderProgressDOM(msg) {
+      const el = document.createElement('div');
+      el.className = 'progress-card ' + (msg.state || '');
+      el.innerHTML = `<span class="dot"></span><span class="txt">${escapeHtml(msg.content || '')}</span>`;
+      return el;
+    }
+
+    function pushBubble(role, content) {
+      const msg = appendAgentMessage(sessionId, { role, kind: 'text', content });
+      renderMessage(msg);
+      scrollToBottom();
+      return msg;
+    }
+
+    function patchBubble(msgId, content, { streaming = false, thinking = null } = {}) {
+      const el = $stream.querySelector(`[data-msg-id="${msgId}"]`);
+      if (!el) return;
+      const bubble = el.classList.contains('yc-line') ? el.querySelector('.bubble') : el;
+      const existingThinking = thinking === null ? bubble.querySelector('.thinking-body')?.textContent : null;
+      const thinkingWasOpen = !!bubble.querySelector('.thinking-fold')?.open;
+      bubble.innerHTML = renderMd(content || '');
+      if (streaming) bubble.classList.add('streaming-caret');
+      else bubble.classList.remove('streaming-caret');
+      const nextThinking = thinking ?? existingThinking;
+      if (nextThinking) bubble.prepend(renderThinkingDOM(nextThinking, thinkingWasOpen));
+      patchAgentMessage(sessionId, msgId, { content, streaming, ...(nextThinking ? { thinking: nextThinking } : {}) }, isYcMode() ? 'ycMessages' : 'messages');
+    }
+
+    async function pushStreamingBubble(content, { thinking = null } = {}) {
+      const text = String(content || '');
+      const msg = appendAgentMessage(sessionId, { role: 'ai', kind: 'text', content: '', streaming: true }, isYcMode() ? 'ycMessages' : 'messages');
+      renderMessage(msg);
+      scrollToBottom();
+      if (!text) {
+        patchBubble(msg.id, '', { streaming: false, thinking });
+        return msg;
+      }
+      let shown = '';
+      for (let i = 0; i < text.length; i++) {
+        shown += text[i];
+        patchBubble(msg.id, shown, { streaming: true });
+        scrollToBottom();
+        if (i % 3 === 2) await new Promise((resolve) => setTimeout(resolve, 12));
+      }
+      patchBubble(msg.id, text, { streaming: false, thinking });
+      return msg;
+    }
+
+    function pushProgress(content, state = '') {
+      const msg = appendAgentMessage(sessionId, { role: 'ai', kind: 'progress', content, state });
+      renderMessage(msg);
+      scrollToBottom();
+      return msg;
+    }
+
+    function patchProgress(msgId, content, state) {
+      const el = $stream.querySelector(`[data-msg-id="${msgId}"]`);
+      if (el) {
+        el.querySelector('.txt').textContent = content;
+        if (state !== undefined) el.className = `progress-card ${state || ''}`;
+      }
+      patchAgentMessage(sessionId, msgId, { content, state });
+    }
+
+    // ===== Q-Card 渲染 =====
+    function renderQCardDOM(msg) {
+      const q = msg.qcard;
+      const wrap = document.createElement('div');
+      wrap.className = 'q-card' + (msg.locked ? ' locked' : '');
+      const title = document.createElement('div');
+      title.className = 'q-title';
+      title.textContent = q.title || '快速选一个（或者直接打字）';
+      wrap.appendChild(title);
+
+      const body = document.createElement('div');
+      body.className = 'q-body';
+      wrap.appendChild(body);
+
+      const actions = document.createElement('div');
+      actions.className = 'q-actions';
+      wrap.appendChild(actions);
+
+      let selectedValue = msg.answer ?? null;
+      let selectedSet = new Set(Array.isArray(msg.answer) ? msg.answer : []);
+      let otherInput = null;
+      let getValue = () => selectedValue;
+
+      const opts = q.options || [];
+      const renderOptions = (multi = false) => {
+        const box = document.createElement('div');
+        box.className = 'q-options';
+        opts.forEach((opt) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'q-opt';
+          b.dataset.value = opt.value;
+          b.innerHTML = `<span>${escapeHtml(opt.label)}</span>` + (opt.desc ? `<span class="q-desc">${escapeHtml(opt.desc)}</span>` : '');
+          if (multi ? selectedSet.has(opt.value) : selectedValue === opt.value) b.classList.add('selected');
+          b.onclick = () => {
+            if (msg.locked || busy) return;
+            if (multi) {
+              if (selectedSet.has(opt.value)) { selectedSet.delete(opt.value); b.classList.remove('selected'); }
+              else { selectedSet.add(opt.value); b.classList.add('selected'); }
+            } else {
+              box.querySelectorAll('.q-opt').forEach((x) => x.classList.remove('selected'));
+              b.classList.add('selected');
+              selectedValue = opt.value;
+              if (otherInput) otherInput.value = '';
+            }
+            vibrate('tap');
+          };
+          box.appendChild(b);
+        });
+        return box;
+      };
+
+      if (q.type === 'choice') {
+        body.appendChild(renderOptions());
+        if (q.allowOther) {
+          otherInput = document.createElement('input');
+          otherInput.className = 'q-input';
+          otherInput.placeholder = '或者自己写一个';
+          if (msg.locked && selectedValue && !opts.some((o) => o.value === selectedValue)) otherInput.value = selectedValue;
+          otherInput.oninput = () => {
+            if (otherInput.value.trim()) {
+              body.querySelectorAll('.q-opt').forEach((x) => x.classList.remove('selected'));
+              selectedValue = otherInput.value.trim();
+            }
+          };
+          body.appendChild(otherInput);
+        }
+      } else if (q.type === 'multi') {
+        body.appendChild(renderOptions(true));
+        getValue = () => [...selectedSet];
+      } else if (q.type === 'number') {
+        const box = document.createElement('div');
+        box.className = 'q-number';
+        let val = msg.answer ?? q.default ?? q.min ?? 0;
+        const minus = document.createElement('button');
+        minus.type = 'button'; minus.textContent = '−';
+        const plus = document.createElement('button');
+        plus.type = 'button'; plus.textContent = '+';
+        const valEl = document.createElement('div');
+        valEl.className = 'q-num-val';
+        valEl.textContent = val;
+        minus.onclick = () => { if (msg.locked || busy) return; val = Math.max(q.min ?? 0, val - (q.step || 1)); valEl.textContent = val; vibrate('tap'); };
+        plus.onclick = () => { if (msg.locked || busy) return; val = Math.min(q.max ?? 999, val + (q.step || 1)); valEl.textContent = val; vibrate('tap'); };
+        box.appendChild(minus); box.appendChild(valEl); box.appendChild(plus);
+        body.appendChild(box);
+        getValue = () => val;
+      } else if (q.type === 'preset') {
+        body.appendChild(renderOptions());
+        if (q.allowOther) {
+          otherInput = document.createElement('textarea');
+          otherInput.className = 'q-input';
+          otherInput.placeholder = q.otherPlaceholder || '或者写一段你自己的粒度描述';
+          if (msg.locked && selectedValue && !opts.some((o) => o.value === selectedValue)) otherInput.value = selectedValue;
+          otherInput.oninput = () => {
+            if (otherInput.value.trim()) {
+              body.querySelectorAll('.q-opt').forEach((x) => x.classList.remove('selected'));
+              selectedValue = otherInput.value.trim();
+            }
+          };
+          body.appendChild(otherInput);
+        }
+      }
+
+      if (q.type === 'confirm') {
+        const cancel = document.createElement('button');
+        cancel.className = 'q-skip';
+        cancel.textContent = q.cancelLabel || '稍等';
+        cancel.onclick = () => submit(false);
+        const ok = document.createElement('button');
+        ok.className = 'q-submit';
+        ok.textContent = q.okLabel || '继续';
+        ok.onclick = () => submit(true);
+        actions.appendChild(cancel);
+        actions.appendChild(ok);
+      } else {
+        const sub = document.createElement('button');
+        sub.className = 'q-submit';
+        sub.textContent = '确 定';
+        sub.onclick = () => {
+          if (msg.locked || busy) return;
+          const v = getValue();
+          if (v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length)) {
+            toast('选一个或填一句再提交', 'error');
+            return;
+          }
+          submit(v);
+        };
+        actions.appendChild(sub);
+      }
+
+      function submit(value) {
+        if (msg.locked) return;
+        msg.answer = value;
+        msg.locked = true;
+        patchAgentMessage(sessionId, msg.id, { answer: value, locked: true });
+        wrap.classList.add('locked');
+        wrap.querySelectorAll('input, textarea, button').forEach((e) => { e.disabled = true; });
+        vibrate('ok');
+        const echoed = formatQCardAnswer(q, value);
+        runTurn(echoed);
+      }
+
+      return wrap;
+    }
+
+    function formatQCardAnswer(q, value) {
+      if (q.type === 'confirm') return value ? (q.okLabel || '继续') : (q.cancelLabel || '稍等');
+      if (Array.isArray(value)) return value.join('、');
+      if (typeof value === 'number') return String(value);
+      const opt = (q.options || []).find((o) => o.value === value);
+      return opt ? opt.label : String(value);
+    }
+
+    // ===== Chapter Bubble =====
+    function renderChapterBubbleDOM(msg) {
+      const el = document.createElement('div');
+      el.className = 'chapter-bubble';
+      const head = document.createElement('div');
+      head.className = 'cb-head';
+      const t = document.createElement('div');
+      t.className = 'cb-title';
+      t.textContent = msg.chapterTitle || `第 ${msg.chapterN} 章`;
+      const m = document.createElement('div');
+      m.className = 'cb-meta';
+      m.textContent = msg.chapterMeta || `· 第 ${msg.chapterN} 章 ·`;
+      head.appendChild(t); head.appendChild(m);
+      el.appendChild(head);
+      const body = document.createElement('div');
+      body.className = 'cb-body';
+      body.innerHTML = renderMd(msg.content || '');
+      if (msg.streaming) body.classList.add('streaming-caret');
+      if (msg.thinking) el.appendChild(renderThinkingDOM(msg.thinking));
+      el.appendChild(body);
+      const foot = document.createElement('div');
+      foot.className = 'cb-foot';
+      el.appendChild(foot);
+      return el;
+    }
+
+    function patchChapterContent(msgId, fullText, { streaming = false } = {}) {
+      const el = $stream.querySelector(`[data-msg-id="${msgId}"]`);
+      if (!el) return;
+      const body = el.querySelector('.cb-body');
+      body.innerHTML = renderMd(fullText);
+      const meta = el.querySelector('.cb-meta');
+      if (meta && el._chN) meta.textContent = `· 第 ${el._chN} 章 · ${cnWordCount(fullText)} 字 ·`;
+      if (streaming) body.classList.add('streaming-caret');
+      else {
+        body.classList.remove('streaming-caret');
+      }
+    }
+
+    function patchChapterThinking(msgId, thinking) {
+      if (!thinking) return;
+      const el = $stream.querySelector(`[data-msg-id="${msgId}"]`);
+      if (!el) return;
+      const old = el.querySelector('.thinking-fold');
+      const thinkingWasOpen = !!old?.open;
+      if (old) old.remove();
+      const body = el.querySelector('.cb-body');
+      el.insertBefore(renderThinkingDOM(thinking, thinkingWasOpen), body || null);
+    }
+
+    // ===== 极简 markdown =====
+    function renderMd(text) {
+      if (!text) return '';
+      const lines = String(text).split(/\n+/);
+      return lines.map((l) => {
+        if (l.startsWith('> ')) return `<blockquote>${escapeHtml(l.slice(2))}</blockquote>`;
+        if (l.startsWith('## ')) return `<h3>${escapeHtml(l.slice(3))}</h3>`;
+        if (l.startsWith('- ')) return `<p>· ${escapeHtml(l.slice(2))}</p>`;
+        return `<p>${escapeHtml(l)}</p>`;
+      }).join('');
+    }
+    function escapeHtml(s) { return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+    function escapeAttr(s) {
+      return escapeHtml(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    // ===== Q-Card 推送辅助 =====
+    function pushQCard(qcard) {
+      const msg = appendAgentMessage(sessionId, { role: 'ai', kind: 'qcard', qcard, locked: false });
+      renderMessage(msg);
+      scrollToBottom();
+      return msg;
+    }
+
+    // ===== 回放历史 messages =====
+    function replay() {
+      $stream.innerHTML = '';
+      for (const msg of session.messages) {
+        renderMessage(msg);
+      }
+      scrollToBottom();
+    }
+
+    function replayYc() {
+      $stream.innerHTML = '';
+      const list = Array.isArray(session.ycMessages) ? session.ycMessages : [];
+      for (const msg of list) {
+        renderMessage(msg);
+      }
+      if (!list.length) {
+        const hint = document.createElement('div');
+        hint.className = 'empty-hint';
+        hint.innerHTML = `纯语C分页。这里不会弹选择卡，也不会自动规划标题、大纲或章节。<br>直接开场、接戏、OOC 都可以。`;
+        $stream.appendChild(hint);
+      }
+      scrollToBottom();
+    }
+
+    // ===== 状态快照（喂给 planner）=====
+    function snapshotState() {
+      const titleIsReal = novel.title && novel.title !== '未命名 · Agent';
+      return {
+        title: titleIsReal ? novel.title : null,
+        titleCandidates: novel.titleCandidates || null,
+        spec: novel.spec || {},
+        chaptersN: novel.chaptersN || (novel.outline && novel.outline.length) || null,
+        logline: novel.spec?.logline || null,
+        synopsis: novel.spec?.synopsis || null,
+        outlineExists: !!(novel.outline && novel.outline.length),
+        outlineCount: novel.outline?.length || 0,
+        charactersExists: !!(novel.characters && novel.characters.length),
+        microGranularity: session.microGranularity || null,
+        microDoneChapters: (session.micro || []).filter((m) => m.items?.length).map((m) => m.n),
+        chaptersDone: (novel.chapters || []).filter((c) => c.body).map((c) => c.n),
+        styleId: session.styleId || null,
+      };
+    }
+
+    // ===== 把 agent.messages 压缩成 dialog history（喂给 planner）=====
+    function recentDialog(maxTurns = 20) {
+      const out = [];
+      const ms = session.messages.slice(-maxTurns * 2);
+      for (const m of ms) {
+        if (m.kind === 'text') {
+          out.push({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content });
+        } else if (m.kind === 'qcard' && m.locked) {
+          out.push({ role: 'assistant', content: '[弹出选择卡] ' + (m.qcard?.title || '') });
+          out.push({ role: 'user', content: formatQCardAnswer(m.qcard, m.answer) });
+        } else if (m.kind === 'progress' && m.state === 'done') {
+          out.push({ role: 'assistant', content: '[完成] ' + m.content });
+        } else if (m.kind === 'chapter' && !m.streaming) {
+          out.push({ role: 'assistant', content: `[已生成第 ${m.chapterN} 章正文，约 ${cnWordCount(m.content)} 字]` });
+        }
+      }
+      return out;
+    }
+
+    function recentYcDialog(maxTurns = 24) {
+      const list = Array.isArray(session.ycMessages) ? session.ycMessages : [];
+      return list
+        .filter((m) => m.kind === 'text' && !m.streaming)
+        .slice(-maxTurns)
+        .map((m) => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content || '' }));
+    }
+
+    // ===== 调用规划器 =====
+    async function planNext() {
+      const snapshot = snapshotState();
+      const dlg = recentDialog(16);
+      const messages = agentPlannerPrompt(snapshot, dlg);
+      const raw = await chat(messages, { jsonMode: true, temperature: 0.6, model: session.model || undefined });
+      const plan = parseJson(raw);
+      if (!plan || typeof plan !== 'object') throw new Error('规划器没给出有效 JSON');
+      return plan;
+    }
+
+    function isProModel() {
+      return ((session && session.model) || '').includes('pro');
+    }
+
+    function planThinkingSummary(plan) {
+      const parts = [];
+      if (plan.patch && Object.keys(plan.patch).length) parts.push('先记录用户刚补充的设定');
+      if (plan.qcard) parts.push('用选择卡降低下一步输入成本');
+      if (plan.action && plan.action !== 'none') parts.push(`下一步调用 ${plan.action}`);
+      if (!parts.length) parts.push('本轮只继续对话，不调用生成工具');
+      return parts.join('；') + '。';
+    }
+
+    function isYcMode() {
+      return !!(session && session.ycMode);
+    }
+
+    function refreshModeToggle() {
+      if (!$ycModeBtn) return;
+      const on = isYcMode();
+      $ycModeBtn.checked = on;
+      if ($roleCardBtn) $roleCardBtn.hidden = !on;
+      refreshRoleButtonLabel();
+      $input.placeholder = on
+        ? '纯语C中…直接接话，不走规划器'
+        : '想说点什么…（Enter 发送，Shift+Enter 换行）';
+      refreshPromote();
+      const stage = $('#chat-stage');
+      if (stage) stage.textContent = on
+        ? '纯语C · 不规划，不弹卡，只接戏'
+        : '说话就行 · 我会陪你把小说一点点捋出来';
+      if (session) {
+        if (on) replayYc();
+        else replay();
+      }
+    }
+
+    function currentAiRoleName() {
+      return roleCardDisplayName(session?.roleCard) || '';
+    }
+
+    function refreshRoleButtonLabel() {
+      if (!$roleCardBtnLabel) return;
+      $roleCardBtnLabel.textContent = currentAiRoleName() || '未设置角色';
+    }
+
+    function renderRoleCardPicker() {
+      const cards = listAiRoleCards();
+      const current = session?.roleCardId || '';
+      const items = cards.map((card) => `
+        <button type="button" class="role-select-item ${card.id === current ? 'current' : ''}" data-id="${card.id}">
+          <span class="role-card-avatar">${escapeHtml(roleCardInitial(card))}</span>
+          <span class="role-select-main">
+            <b>${escapeHtml(roleCardDisplayName(card) || '未命名角色')}</b>
+            <small>${escapeHtml(card.identity || card.personality || 'AI 角色')}</small>
+          </span>
+        </button>`).join('');
+      $roleCardPicker.innerHTML = `
+        <button type="button" class="role-select-item ${!current ? 'current' : ''}" data-id="">
+          <span class="role-card-avatar"><img class="mask-icon" src="../assets/icons8-mask.svg" alt=""></span>
+          <span class="role-select-main"><b>未设置角色</b><small>不戴任何 AI 角色面具</small></span>
+        </button>
+        ${items || '<div class="role-select-empty">还没有 AI 角色卡。先去专用页面编写一张。</div>'}`;
+    }
+
+    function openRoleCardModal() {
+      if (!session) return;
+      renderRoleCardPicker();
+      $roleCardModal.hidden = false;
+      $roleCardModal.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(() => $roleCardModal.classList.add('open'));
+    }
+
+    function closeRoleCardModal() {
+      $roleCardModal.classList.remove('open');
+      $roleCardModal.hidden = true;
+      $roleCardModal.setAttribute('aria-hidden', 'true');
+    }
+
+    // ===== 把 patch 落到 novel =====
+    function applyPatch(patch) {
+      if (!patch || typeof patch !== 'object') return;
+      let dirty = false;
+      if (patch.spec && typeof patch.spec === 'object') {
+        novel.spec = { ...(novel.spec || {}), ...patch.spec };
+        dirty = true;
+      }
+      if (typeof patch.chaptersN === 'number') {
+        novel.chaptersN = patch.chaptersN;
+        dirty = true;
+      }
+      if (typeof patch.microGranularity === 'string') {
+        session.microGranularity = patch.microGranularity;
+        setAgentMicro(sessionId, session.micro || [], patch.microGranularity);
+      }
+      if (dirty) updateAgentSession(sessionId, { spec: novel.spec, chaptersN: novel.chaptersN });
+    }
+
+    // ===== 工具执行：每个 action 一个 exec =====
+
+    async function execGenTitles() {
+      const p = pushProgress('正在拟标题…', 'pending');
+      try {
+        const raw = await chat(titlesPrompt(novel.spec || {}), { jsonMode: true, model: session.model || undefined });
+        const r = parseJson(raw);
+        const titles = Array.isArray(r?.titles) ? r.titles : [];
+        if (!titles.length) throw new Error('标题没给出');
+        novel.titleCandidates = titles;
+        updateAgentSession(sessionId, { titleCandidates: titles });
+        patchProgress(p.id, '6 个候选标题已生成', 'done');
+        pushBubble('ai', '挑一个看着顺眼的：\n\n' + titles.map((t, i) => `${i + 1}. 《${t}》`).join('\n'));
+        return true;
+      } catch (e) {
+        patchProgress(p.id, '标题生成失败：' + e.message, 'error');
+        vibrate('warn');
+        return false;
+      }
+    }
+
+    function execSelectTitle(args) {
+      const t = args?.title?.trim();
+      if (!t) return false;
+      novel.title = t;
+      updateAgentSession(sessionId, { title: t });
+      return true;
+    }
+
+    async function execGenLogline() {
+      const p = pushProgress('在写 logline 和故事概述…', 'pending');
+      try {
+        const raw = await chat(loglinePrompt(novel.spec || {}), { jsonMode: true, model: session.model || undefined });
+        const r = parseJson(raw);
+        if (!r?.logline) throw new Error('返回为空');
+        novel.spec = { ...(novel.spec || {}), logline: r.logline, synopsis: r.synopsis };
+        updateAgentSession(sessionId, { spec: novel.spec });
+        patchProgress(p.id, 'logline 和概述就绪', 'done');
+        pushBubble('ai', `**Logline**\n${r.logline}\n\n**故事概述**\n${r.synopsis || ''}`);
+        return true;
+      } catch (e) {
+        patchProgress(p.id, '生成失败：' + e.message, 'error');
+        vibrate('warn');
+        return false;
+      }
+    }
+
+    async function execGenOutline(args) {
+      const n = Number(args?.n) || novel.chaptersN || 15;
+      const p = pushProgress(`在铺 ${n} 章大纲…`, 'pending');
+      try {
+        const raw = await chat(outlinePrompt(novel.spec || {}, n), { jsonMode: true, temperature: 0.75, model: session.model || undefined });
+        const r = parseJson(raw);
+        const chs = Array.isArray(r?.chapters) ? r.chapters : [];
+        if (!chs.length) throw new Error('大纲为空');
+        novel.outline = chs;
+        novel.chaptersN = n;
+        updateAgentSession(sessionId, { outline: chs, chaptersN: n });
+        patchProgress(p.id, `${chs.length} 章大纲已铺好`, 'done');
+        const preview = chs.slice(0, 5).map((c) => `· 第 ${c.n} 章 · ${c.title}：${c.event}`).join('\n');
+        pushBubble('ai', `大纲铺好了，先看前 5 章：\n\n${preview}${chs.length > 5 ? `\n\n（剩下 ${chs.length - 5} 章可在书房查看）` : ''}`);
+        return true;
+      } catch (e) {
+        patchProgress(p.id, '大纲生成失败：' + e.message, 'error');
+        vibrate('warn');
+        return false;
+      }
+    }
+
+    async function execGenCharacters() {
+      if (!novel.outline?.length) { pushBubble('ai', '还没大纲，先铺大纲再设计人物。'); return false; }
+      const p = pushProgress('在设计核心角色…', 'pending');
+      try {
+        const raw = await chat(charactersPrompt(novel.spec || {}, novel.outline), { jsonMode: true, model: session.model || undefined });
+        const r = parseJson(raw);
+        const chars = Array.isArray(r?.characters) ? r.characters : [];
+        if (!chars.length) throw new Error('人物为空');
+        novel.characters = chars;
+        updateAgentSession(sessionId, { characters: chars });
+        patchProgress(p.id, `${chars.length} 个角色已建档`, 'done');
+        const lines = chars.map((c) => `· **${c.name}**（${c.role}）｜核心：${c.core}｜致命：${c.fatal || '—'}`).join('\n');
+        pushBubble('ai', `角色档案：\n\n${lines}`);
+        return true;
+      } catch (e) {
+        patchProgress(p.id, '人物生成失败：' + e.message, 'error');
+        vibrate('warn');
+        return false;
+      }
+    }
+
+    async function execGenMicro(args) {
+      const n = Number(args?.chapter);
+      const g = (args?.granularity || session.microGranularity || 'scenes').trim();
+      if (!novel.outline?.length) { pushBubble('ai', '还没大纲，先铺大纲。'); return false; }
+      const meta = novel.outline.find((c) => c.n === n);
+      if (!meta) { pushBubble('ai', `没找到第 ${n} 章的大纲。`); return false; }
+      const p = pushProgress(`在为第 ${n} 章铺细纲（${g}）…`, 'pending');
+      try {
+        const raw = await chat(microPrompt(novel, meta, g), { jsonMode: true, temperature: 0.7, model: session.model || undefined });
+        const r = parseJson(raw);
+        const items = Array.isArray(r?.items) ? r.items : [];
+        if (!items.length) throw new Error('细纲为空');
+        const existing = session.micro || [];
+        const idx = existing.findIndex((m) => m.n === n);
+        const entry = { n, granularity: g, items };
+        if (idx >= 0) existing[idx] = entry; else existing.push(entry);
+        session.micro = existing;
+        setAgentMicro(sessionId, existing, g);
+        patchProgress(p.id, `第 ${n} 章细纲（${items.length} 条）`, 'done');
+        const lines = items.map((it) => `· **${it.label}**：${it.desc}`).join('\n');
+        pushBubble('ai', `第 ${n} 章细纲（${g}）：\n\n${lines}`);
+        return true;
+      } catch (e) {
+        patchProgress(p.id, '细纲生成失败：' + e.message, 'error');
+        vibrate('warn');
+        return false;
+      }
+    }
+
+    async function execGenChapter(args) {
+      const n = Number(args?.chapter);
+      const meta = novel.outline?.find((c) => c.n === n);
+      if (!meta) { pushBubble('ai', `没找到第 ${n} 章的大纲。`); return false; }
+      const micro = (session.micro || []).find((m) => m.n === n);
+      const prevCh = novel.chapters?.find((c) => c.n === n - 1);
+      const prevBody = prevCh?.body || '';
+      const prevSummary = prevCh?.summary || '';
+
+      // 拼章节 prompt，把细纲塞到末尾
+      const promptMsgs = chapterPrompt(novel, meta, prevBody, prevSummary);
+      if (micro?.items?.length) {
+        const microText = `\n\n本章细纲（${micro.granularity}，按顺序铺开）：\n` + micro.items.map((it, i) => `${i + 1}. [${it.label}] ${it.desc}${it.goal ? ' · 目标：' + it.goal : ''}${it.turn ? ' · 转：' + it.turn : ''}`).join('\n');
+        promptMsgs[promptMsgs.length - 1].content += microText;
+      }
+
+      const bubbleMsg = appendAgentMessage(sessionId, {
+        role: 'ai', kind: 'chapter', chapterN: n,
+        chapterTitle: `第 ${n} 章 · ${meta.title}`,
+        chapterMeta: `· 第 ${n} 章 · 0 字 ·`,
+        content: '', streaming: true,
+      });
+      renderMessage(bubbleMsg);
+      scrollToBottom();
+
+      let full = '';
+      try {
+        let reasoning = '';
+        await stream(promptMsgs, { temperature: 0.85, model: session.model || undefined }, (chunk, _full, thought) => {
+          if (thought) reasoning += thought;
+          full += chunk;
+          if (!chunk && thought) {
+            patchChapterThinking(bubbleMsg.id, reasoning.trim());
+            patchAgentMessage(sessionId, bubbleMsg.id, { thinking: reasoning.trim() });
+            return;
+          }
+          patchChapterContent(bubbleMsg.id, full, { streaming: true });
+          scrollToBottom();
+        });
+        patchAgentMessage(sessionId, bubbleMsg.id, { content: full, streaming: false, ...(reasoning.trim() ? { thinking: reasoning.trim() } : {}) });
+        patchChapterContent(bubbleMsg.id, full, { streaming: false });
+        patchChapterThinking(bubbleMsg.id, reasoning.trim());
+        // 落到 novel.chapters
+        upsertAgentChapter(sessionId, { n, title: meta.title, body: full });
+        novel.chapters = (novel.chapters || []).filter((c) => c.n !== n).concat({ n, title: meta.title, body: full });
+        vibrate('done');
+        // 后台跑摘要
+        chat(summaryPrompt(meta, full), { model: session.model || undefined }).then((s) => {
+          upsertAgentChapter(sessionId, { n, title: meta.title, summary: s.trim() });
+        }).catch(() => {});
+        return true;
+      } catch (e) {
+        patchAgentMessage(sessionId, bubbleMsg.id, { content: full || '生成中断：' + e.message, streaming: false });
+        patchChapterContent(bubbleMsg.id, full || '生成中断：' + e.message, { streaming: false });
+        vibrate('warn');
+        return false;
+      }
+    }
+
+    async function runAction(plan) {
+      const a = plan.action;
+      if (!a || a === 'none') return false;
+      try {
+        switch (a) {
+          case 'gen_titles':     return await execGenTitles();
+          case 'select_title':   return execSelectTitle(plan.args);
+          case 'gen_logline':    return await execGenLogline();
+          case 'gen_outline':    return await execGenOutline(plan.args);
+          case 'gen_characters': return await execGenCharacters();
+          case 'gen_micro':      return await execGenMicro(plan.args);
+          case 'gen_chapter':    return await execGenChapter(plan.args);
+          case 'done':           return false;
+          default:
+            console.warn('未知 action', a);
+            return false;
+        }
+      } catch (e) {
+        console.error('[action error]', e);
+        pushBubble('ai', '动作执行出岔：' + (e.message || e));
+        vibrate('warn');
+        return false;
+      }
+    }
+
+    // ===== 主循环 =====
+    async function runTurn(userText) {
+      if (busy) return;
+      if (!requireApiKey()) return;
+      setBusy(true);
+      try {
+        if (userText) pushBubble('user', userText);
+        let cycles = 0;
+        while (cycles < 4) {
+          let plan;
+          try { plan = await planNext(); }
+          catch (e) {
+            pushBubble('ai', '想了半天没想清楚，再说一次？（' + (e.message || e) + '）');
+            vibrate('warn');
+            break;
+          }
+          if (plan.patch) applyPatch(plan.patch);
+          if (plan.say) await pushStreamingBubble(plan.say, { thinking: isProModel() ? planThinkingSummary(plan) : null });
+          let pushedQ = false;
+          if (plan.qcard && plan.qcard.type) {
+            pushQCard(plan.qcard);
+            pushedQ = true;
+          }
+          const continued = await runAction(plan);
+          if (pushedQ) break;     // qcard 弹出后等用户回应
+          if (!continued) break;  // 没继续动作就停手
+          cycles++;
+        }
+      } finally {
+        setBusy(false);
+        refreshPromote();
+      }
+    }
+
+    async function runYcTurn(userText) {
+      if (busy) return;
+      if (!requireApiKey()) return;
+      setBusy(true);
+      try {
+        const userMsg = appendAgentMessage(sessionId, { role: 'user', kind: 'text', content: userText }, 'ycMessages');
+        renderMessage(userMsg);
+        scrollToBottom();
+        const bubbleMsg = appendAgentMessage(sessionId, {
+          role: 'ai',
+          kind: 'text',
+          content: '',
+          streaming: true,
+        }, 'ycMessages');
+        renderMessage(bubbleMsg);
+        scrollToBottom();
+
+        let full = '';
+        const ycSession = { ...session, userRoleCard: getUserRoleCard() };
+        const messages = ycChatPrompt(ycSession, recentYcDialog(24));
+        let reasoning = '';
+        await stream(messages, { temperature: 0.9, model: session.model || undefined }, (chunk, _full, thought) => {
+          if (thought) {
+            reasoning += thought;
+            patchBubble(bubbleMsg.id, full, { streaming: true, thinking: reasoning.trim() });
+            return;
+          }
+          full += chunk;
+          patchBubble(bubbleMsg.id, full, { streaming: true });
+          scrollToBottom();
+        });
+        patchBubble(bubbleMsg.id, full, {
+          streaming: false,
+          thinking: reasoning.trim() || (isProModel() ? '纯语C模式：按上下文直接接话，未调用规划器、JSON 或构建工具。' : null),
+        });
+      } catch (e) {
+        const err = appendAgentMessage(sessionId, { role: 'ai', kind: 'text', content: '接话中断：' + (e.message || e) }, 'ycMessages');
+        renderMessage(err);
+        vibrate('warn');
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    // ===== 输入绑定 =====
+    function autoresize() {
+      $input.style.height = 'auto';
+      $input.style.height = Math.min(160, Math.max(56, $input.scrollHeight)) + 'px';
+      updateInputDockMetrics();
+    }
+    $input.addEventListener('input', autoresize);
+    $input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    });
+    $send.addEventListener('click', handleSend);
+    $stream.addEventListener('scroll', () => {
+      autoStickBottom = distanceFromBottom() < 96;
+      refreshScrollBottomButton();
+    }, { passive: true });
+    $scrollBottomBtn.addEventListener('click', () => {
+      autoStickBottom = true;
+      $stream.scrollTo({ top: $stream.scrollHeight, behavior: 'smooth' });
+      setTimeout(refreshScrollBottomButton, 260);
+    });
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(updateInputDockMetrics).observe($chatInputPanel);
+    }
+    window.addEventListener('resize', updateInputDockMetrics);
+
+    function handleSend() {
+      if (busy) return;
+      const text = $input.value.trim();
+      if (!text) return;
+      $input.value = '';
+      autoresize();
+      if (isYcMode()) runYcTurn(text);
+      else runTurn(text);
+    }
+
+    // ===== 附件上传：MD / TXT / DOCX / DOC =====
+    $attachBtn.addEventListener('click', () => {
+      if (busy) return;
+      $attachInput.value = '';
+      $attachInput.click();
+    });
+    $attachInput.addEventListener('change', async () => {
+      const file = $attachInput.files?.[0];
+      if (!file) return;
+      try {
+        $attachBtn.disabled = true;
+        const text = await readAttachmentText(file);
+        if (!text.trim()) throw new Error('没有解析出可用文本');
+        insertTextAtCursor(`\n\n[附件：${file.name}]\n${text.trim()}\n`);
+        toast('附件内容已插入输入框', 'success');
+        vibrate('ok');
+      } catch (e) {
+        toast('附件解析失败：' + (e.message || e), 'error');
+        vibrate('warn');
+      } finally {
+        $attachBtn.disabled = false;
+      }
+    });
+
+    function insertTextAtCursor(text) {
+      const start = $input.selectionStart ?? $input.value.length;
+      const end = $input.selectionEnd ?? $input.value.length;
+      $input.value = $input.value.slice(0, start) + text + $input.value.slice(end);
+      const caret = start + text.length;
+      $input.focus();
+      $input.setSelectionRange(caret, caret);
+      autoresize();
+    }
+
+    async function readAttachmentText(file) {
+      const name = file.name.toLowerCase();
+      if (name.endsWith('.md') || name.endsWith('.txt') || file.type.startsWith('text/')) {
+        return await file.text();
+      }
+      const buf = await file.arrayBuffer();
+      if (name.endsWith('.docx')) return await readDocxText(buf);
+      if (name.endsWith('.doc')) {
+        const text = readBinaryDocText(buf);
+        if (!text.trim()) throw new Error('旧版 .doc 解析能力有限，请转成 .docx / .txt 再上传');
+        toast('旧版 .doc 已尽力提取，建议转 .docx 获得更完整内容', 'info', 3600);
+        return text;
+      }
+      throw new Error('只支持 MD、TXT、DOC、DOCX');
+    }
+
+    async function readDocxText(buf) {
+      const entries = await unzipEntries(new Uint8Array(buf));
+      const doc = entries.get('word/document.xml');
+      if (!doc) throw new Error('不是有效的 .docx 文件');
+      const xml = new TextDecoder('utf-8').decode(doc);
+      return xml
+        .replace(/<w:tab\/>/g, '\t')
+        .replace(/<w:br\/>/g, '\n')
+        .replace(/<\/w:p>/g, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'")
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+    async function unzipEntries(bytes) {
+      const out = new Map();
+      let p = 0;
+      while (p + 30 < bytes.length) {
+        const sig = u32(bytes, p);
+        if (sig !== 0x04034b50) break;
+        const method = u16(bytes, p + 8);
+        const compressedSize = u32(bytes, p + 18);
+        const fileNameLength = u16(bytes, p + 26);
+        const extraLength = u16(bytes, p + 28);
+        const nameStart = p + 30;
+        const dataStart = nameStart + fileNameLength + extraLength;
+        const dataEnd = dataStart + compressedSize;
+        const name = new TextDecoder('utf-8').decode(bytes.slice(nameStart, nameStart + fileNameLength));
+        if (method === 0) {
+          out.set(name, bytes.slice(dataStart, dataEnd));
+        } else if (method === 8) {
+          out.set(name, await inflateRaw(bytes.slice(dataStart, dataEnd)));
+        }
+        p = dataEnd;
+      }
+      return out;
+    }
+    async function inflateRaw(bytes) {
+      if (!('DecompressionStream' in window)) {
+        throw new Error('当前浏览器无法解压该 .docx，请先另存为 TXT 或 MD');
+      }
+      try {
+        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+        return new Uint8Array(await new Response(stream).arrayBuffer());
+      } catch {
+        throw new Error('当前浏览器无法解压该 .docx，请先另存为 TXT 或 MD');
+      }
+    }
+    function u16(bytes, p) { return bytes[p] | (bytes[p + 1] << 8); }
+    function u32(bytes, p) { return (bytes[p] | (bytes[p + 1] << 8) | (bytes[p + 2] << 16) | (bytes[p + 3] << 24)) >>> 0; }
+    function readBinaryDocText(buf) {
+      const bytes = new Uint8Array(buf);
+      let out = '';
+      let run = '';
+      for (const b of bytes) {
+        if ((b >= 32 && b <= 126) || b === 10 || b === 13 || b === 9) run += String.fromCharCode(b);
+        else {
+          if (run.length >= 3) out += run + '\n';
+          run = '';
+        }
+      }
+      if (run.length >= 3) out += run;
+      return out.replace(/[^\S\r\n]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+    }
+
+    // ===== Quick prompt popover =====
+    function renderQuickPrompts() {
+      $qpList.innerHTML = QUICK_PROMPTS.map((p, i) => `
+        <li class="qp-item" data-i="${i}">
+          <span class="qp-label">${escapeHtml(p.label)}</span>
+          <span class="qp-insert">（${escapeHtml(p.insert)}）</span>
+        </li>`).join('');
+    }
+    function openQuickPrompt() {
+      $qpPop.hidden = false;
+      requestAnimationFrame(() => $qpPop.classList.add('open'));
+    }
+    function closeQuickPrompt() {
+      $qpPop.classList.remove('open');
+      $qpPop.hidden = true;
+    }
+    function isQuickPromptOpen() { return !$qpPop.hidden; }
+    function insertQuickPrompt(i) {
+      const p = QUICK_PROMPTS[i];
+      if (!p) return;
+      // 在光标处插入；如果输入框未聚焦或无选区，追加到末尾
+      const el = $input;
+      const start = el.selectionStart ?? el.value.length;
+      const end = el.selectionEnd ?? el.value.length;
+      const before = el.value.slice(0, start);
+      const after = el.value.slice(end);
+      el.value = before + p.insert + after;
+      const caret = start + p.insert.length;
+      autoresize();
+      // 不强制聚焦：用户可能想继续点别的短语；但若已聚焦，恢复光标
+      if (document.activeElement === el) el.setSelectionRange(caret, caret);
+      vibrate('tap');
+      closeQuickPrompt();
+    }
+    $qpBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (isQuickPromptOpen()) closeQuickPrompt();
+      else { renderQuickPrompts(); openQuickPrompt(); }
+    });
+    $qpList.addEventListener('click', (e) => {
+      const li = e.target.closest('.qp-item');
+      if (!li) return;
+      insertQuickPrompt(Number(li.dataset.i));
+    });
+
+    // ===== Session drawer =====
+    function formatRelTime(iso) {
+      if (!iso) return '';
+      const t = new Date(iso).getTime();
+      if (!t) return '';
+      const diff = Date.now() - t;
+      const MIN = 60_000, HOUR = 60 * MIN, DAY = 24 * HOUR;
+      if (diff < MIN) return '刚刚';
+      if (diff < HOUR) return `${Math.floor(diff / MIN)} 分钟前`;
+      if (diff < DAY) return `${Math.floor(diff / HOUR)} 小时前`;
+      if (diff < 7 * DAY) return `${Math.floor(diff / DAY)} 天前`;
+      const d = new Date(iso);
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    }
+    function sessionTitleOf(s) {
+      if (s.title && s.title !== '未命名 · Agent') return s.title;
+      const firstUser = (s.messages || []).find((m) => m.role === 'user' && m.kind === 'text');
+      if (firstUser?.content) {
+        const t = firstUser.content.trim();
+        return t.length > 20 ? t.slice(0, 20) + '…' : t;
+      }
+      const d = new Date(s.createdAt || Date.now());
+      const pad = (n) => String(n).padStart(2, '0');
+      return `新会话 · ${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function renderSessionList() {
+      const all = listAgentSessions();
+      $sdList.innerHTML = all.map((s) => `
+        <li class="sd-item ${s.id === sessionId ? 'current' : ''}" data-id="${s.id}">
+          <div class="sd-row">
+            <div class="sd-title">${escapeHtml(sessionTitleOf(s))}</div>
+            <button class="sd-more" data-id="${s.id}" type="button" aria-label="更多">⋯</button>
+          </div>
+          <div class="sd-meta">${formatRelTime(s.updatedAt)} · ${(s.chapters || []).length} 章</div>
+        </li>`).join('');
+      if (!all.length) {
+        $sdList.innerHTML = `<li class="sd-empty">还没有会话</li>`;
+      }
+    }
+    function openDrawer() {
+      renderSessionList();
+      $drawer.hidden = false;
+      $drawer.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(() => $drawer.classList.add('open'));
+    }
+    function closeDrawer() {
+      $drawer.classList.remove('open');
+      $drawer.setAttribute('aria-hidden', 'true');
+      // 等过渡跑完再 hidden，避免抽屉瞬间消失
+      setTimeout(() => { if (!$drawer.classList.contains('open')) $drawer.hidden = true; }, 260);
+    }
+    function isDrawerOpen() { return $drawer.classList.contains('open'); }
+
+    // 会话操作浮层（重命名/删除/取消）
+    function sessionActionSheet(id) {
+      const s = getAgentSession(id);
+      if (!s) return;
+      const mask = document.createElement('div');
+      mask.className = 'modal-mask';
+      mask.innerHTML = `
+        <div class="modal sd-action">
+          <div class="modal-body">${escapeHtml(sessionTitleOf(s))}</div>
+          <div class="sd-action-foot">
+            <button class="sd-rename">重 命 名</button>
+            <button class="sd-delete">删 除</button>
+            <button class="sd-cancel">取 消</button>
+          </div>
+        </div>`;
+      document.body.appendChild(mask);
+      const close = () => mask.remove();
+      mask.querySelector('.sd-cancel').onclick = close;
+      mask.onclick = (e) => { if (e.target === mask) close(); };
+      mask.querySelector('.sd-rename').onclick = async () => {
+        close();
+        const cur = s.title || sessionTitleOf(s);
+        const next = window.prompt('给这个会话起个名字', cur);
+        if (next == null) return;
+        const trimmed = next.trim();
+        if (!trimmed) return;
+        updateAgentSession(id, { title: trimmed });
+        vibrate('ok');
+        toast('已 重 命 名', 'success');
+        renderSessionList();
+      };
+      mask.querySelector('.sd-delete').onclick = async () => {
+        close();
+        const ok = await confirmDialog(
+          `删除「${escapeHtml(sessionTitleOf(s))}」？<br><br>这条会话的所有消息、大纲、已生成章节都会一起清除，无法恢复。`,
+          { okLabel: '删 除', cancelLabel: '再 想 想' }
+        );
+        if (!ok) return;
+        deleteAgentSession(id);
+        vibrate('warn');
+        if (id === sessionId) {
+          // 删的是当前会话——直接跳回首页
+          location.href = 'index.html';
+          return;
+        }
+        toast('已 删 除', 'success');
+        renderSessionList();
+      };
+    }
+
+    $hamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openDrawer();
+    });
+    $drawer.querySelector('.sd-mask').addEventListener('click', closeDrawer);
+    $sdNew.addEventListener('click', () => {
+      flushAgent();
+      const s = createAgentSession();
+      location.href = `agent.html?session=${s.id}`;
+    });
+    $sdList.addEventListener('click', (e) => {
+      const more = e.target.closest('.sd-more');
+      if (more) {
+        e.stopPropagation();
+        sessionActionSheet(more.dataset.id);
+        return;
+      }
+      const li = e.target.closest('.sd-item');
+      if (!li) return;
+      const id = li.dataset.id;
+      if (!id || id === sessionId) { closeDrawer(); return; }
+      flushAgent();
+      location.href = `agent.html?session=${id}`;
+    });
+
+    // ===== 启动屏（无 ?session= 时显示，不调模型不建 session）=====
+    function renderLaunchScreen() {
+      $chatScreen.hidden = true;
+      $chatLaunch.hidden = false;
+      const recent = listAgentSessions().slice(0, 5);
+      if (recent.length) {
+        $launchRecent.hidden = false;
+        $launchRecentList.innerHTML = recent.map((s) => `
+          <li>
+            <a href="agent.html?session=${s.id}">${escapeHtml(sessionTitleOf(s))}</a>
+            <span class="meta">${formatRelTime(s.updatedAt)}</span>
+          </li>`).join('');
+      } else {
+        $launchRecent.hidden = true;
+      }
+    }
+    $launchNew.addEventListener('click', () => {
+      const s = createAgentSession();
+      vibrate('ok');
+      location.href = `agent.html?session=${s.id}`;
+    });
+    $launchDrawer.addEventListener('click', openDrawer);
+
+    // ===== 模型 / 文风浮层 =====
+    // 通用工厂：弹层开关 + 点项触发 + 点蒙外关闭（点外面关由文末统一 document click 接管）
+    function makeToolPop(popEl, btnEl, onPick) {
+      function open()  { popEl.hidden = false; requestAnimationFrame(() => popEl.classList.add('open')); }
+      function close() { popEl.classList.remove('open'); popEl.hidden = true; }
+      function isOpen(){ return !popEl.hidden; }
+      btnEl.addEventListener('click', (e) => { e.stopPropagation(); isOpen() ? close() : open(); });
+      popEl.addEventListener('click', (e) => {
+        const li = e.target.closest('li[data-id]');
+        if (!li) return;
+        onPick(li.dataset.id);
+        close();
+        vibrate('tap');
+      });
+      return { open, close, isOpen };
+    }
+
+    function renderModelPop() {
+      const curId = (session && session.model) || '';
+      $modelPopList.innerHTML = MODELS.map((m) => `
+        <li data-id="${m.id}" class="${m.id === curId ? 'current' : ''}">
+          <span class="tp-label">${escapeHtml(m.label)}</span>
+          <span class="tp-desc">${escapeHtml(m.desc)}</span>
+        </li>`).join('');
+    }
+    function renderStylePop() {
+      const curId = (session && session.styleId) || '';
+      const head = `<li data-id="" class="${curId === '' ? 'current' : ''}">
+        <span class="tp-label">默 认 文 风</span>
+        <span class="tp-desc">不附加任何流派指引</span>
+      </li>`;
+      const cards = STYLE_CARDS.map((c) => `
+        <li data-id="${c.id}" class="${c.id === curId ? 'current' : ''}">
+          <span class="tp-label">${escapeHtml(c.name)}</span>
+          <span class="tp-desc">${escapeHtml(c.desc)}</span>
+        </li>`).join('');
+      $stylePopList.innerHTML = head + cards;
+    }
+    function refreshToolLabels() {
+      const m = MODELS.find((x) => x.id === ((session && session.model) || ''));
+      $modelLabel.textContent = m ? m.label : 'Flash';
+      const s = STYLE_CARDS.find((x) => x.id === ((session && session.styleId) || ''));
+      $styleLabel.textContent = s ? s.name : '默 认 文 风';
+    }
+
+    const modelPop = makeToolPop($modelPop, $modelBtn, (id) => {
+      if (!session) return;
+      updateAgentSession(sessionId, { model: id });
+      session.model = id;
+      refreshToolLabels();
+    });
+    const stylePop = makeToolPop($stylePop, $styleBtn, (id) => {
+      if (!session) return;
+      updateAgentSession(sessionId, { styleId: id });
+      session.styleId = id;
+      refreshToolLabels();
+    });
+    $ycModeBtn.addEventListener('change', () => {
+      if (!session || busy) return;
+      session.ycMode = $ycModeBtn.checked;
+      updateAgentSession(sessionId, { ycMode: session.ycMode });
+      refreshModeToggle();
+      vibrate('tap');
+      toast(session.ycMode ? '已 开 启 角 色 扮 演' : '已 回 到 Agent 构 建', 'success');
+    });
+    $roleCardBtn.addEventListener('click', openRoleCardModal);
+    $roleCardPicker.addEventListener('click', (e) => {
+      const item = e.target.closest('.role-select-item');
+      if (!item || !session) return;
+      const id = item.dataset.id || '';
+      const card = id ? getAiRoleCard(id) : null;
+      session.roleCardId = id || null;
+      session.roleCard = normalizeRoleCard(card || {});
+      updateAgentSession(sessionId, { roleCardId: session.roleCardId, roleCard: session.roleCard });
+      refreshRoleButtonLabel();
+      renderRoleCardPicker();
+      replayYc();
+      closeRoleCardModal();
+      toast(id ? `已切换为 ${roleCardDisplayName(session.roleCard) || 'AI 角色'}` : '已取消 AI 角色面具', 'success');
+    });
+    $roleCardClose.addEventListener('click', closeRoleCardModal);
+    $roleCardModal.querySelector('.role-card-mask').addEventListener('click', closeRoleCardModal);
+    $roleCardClear.addEventListener('click', () => {
+      if (!session) return;
+      session.roleCardId = null;
+      session.roleCard = normalizeRoleCard({});
+      updateAgentSession(sessionId, { roleCardId: null, roleCard: session.roleCard });
+      refreshRoleButtonLabel();
+      renderRoleCardPicker();
+      replayYc();
+      closeRoleCardModal();
+      toast('已取消 AI 角色面具', 'success');
+    });
+    // 每次打开前刷新当前态高亮
+    $modelBtn.addEventListener('click', renderModelPop);
+    $styleBtn.addEventListener('click', renderStylePop);
+
+    // 全局兜底关闭（quick prompt / model / style 三层互斥；drawer 用 Esc 关）
+    document.addEventListener('click', (e) => {
+      if (isQuickPromptOpen() && !$qpPop.contains(e.target) && e.target !== $qpBtn && !$qpBtn.contains(e.target)) {
+        closeQuickPrompt();
+      }
+      if (modelPop.isOpen() && !$modelPop.contains(e.target) && !$modelBtn.contains(e.target)) {
+        modelPop.close();
+      }
+      if (stylePop.isOpen() && !$stylePop.contains(e.target) && !$styleBtn.contains(e.target)) {
+        stylePop.close();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (!$roleCardModal.hidden) return closeRoleCardModal();
+      if (isQuickPromptOpen()) return closeQuickPrompt();
+      if (modelPop.isOpen())   return modelPop.close();
+      if (stylePop.isOpen())   return stylePop.close();
+      if (isDrawerOpen())      return closeDrawer();
+    });
+
+    // ===== 启动 =====
+    if (session) {
+      $chatLaunch.hidden = true;
+      $chatScreen.hidden = false;
+      refreshToolLabels();
+      refreshModeToggle();
+      autoresize();
+      updateInputDockMetrics();
+      refreshPromote();
+      // 空 session 给个引导卡，不调模型（用户原话「不能够默认调用模型」）
+      if (!session.messages.length && !session.ycMode) {
+        const hint = document.createElement('div');
+        hint.className = 'empty-hint';
+        hint.innerHTML = `说说想写什么——题材、人物、场景，或者干脆一句话灵感都行。<br>也可以点左下 <b>{}</b> 快捷短语，或左上汉堡换个会话。`;
+        $stream.appendChild(hint);
+      }
+    } else {
+      // 启动屏模式：什么都不调
+      renderLaunchScreen();
+    }
+  </script>
+</body>
+</html>

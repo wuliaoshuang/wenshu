@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f1e8">
+  <title>文舒 · AI 小说工坊</title>
+  <meta name="description" content="文舒是一座替你听落笔声音的 AI 小说工坊，从灵感、角色卡、语C接戏到章节生成，陪你把故事写出来。">
+  <meta property="og:title" content="文舒 · AI 小说工坊">
+  <meta property="og:description" content="说话就行。文舒陪你把小说从闪念写成章节。">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/assets/wenshu_icon.png">
+  <link rel="icon" href="/assets/wenshu_icon.png">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="grid-field" aria-hidden="true"></div>
+  <div class="ink-orbit" aria-hidden="true"></div>
+
+  <header class="site-nav">
+    <a class="brand" href="#top" aria-label="文舒首页">
+      <img src="/assets/wenshu_icon.png" alt="">
+      <span>文 舒</span>
+    </a>
+    <nav aria-label="页面导航">
+      <a href="#flow">流程</a>
+      <a href="#roleplay">语C</a>
+      <a href="#download">体验</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">WENSHU · AI NOVEL STUDIO</p>
+        <h1>把一句闪念，养成一部长篇。</h1>
+        <p class="lead">文舒把灵感捕捉、角色卡、纯语C接戏、Agent 规划、章节生成和本地书房放进同一张纸面。你只需要开口，故事会自己长出骨架。</p>
+        <div class="hero-actions">
+          <a class="seal-btn" href="#download">下载 APK</a>
+          <a class="ghost-link" href="#flow">看看它怎么写</a>
+        </div>
+      </div>
+
+      <div class="artifact" aria-label="文舒应用预览">
+        <div class="phone">
+          <div class="phone-top"></div>
+          <div class="screen">
+            <div class="chat-line ai">你想写怎样的第一幕？</div>
+            <div class="chat-line user">一个雨夜，角色误入旧剧院。</div>
+            <div class="qcard">
+              <span>墨小正在拆解</span>
+              <b>题材 · 冲突 · 角色欲望</b>
+            </div>
+            <div class="chapter">
+              <small>CHAPTER 01</small>
+              <p>雨声像一层薄幕，从剧院坍塌的穹顶上垂下来。</p>
+            </div>
+          </div>
+        </div>
+        <div class="stamp">墨<br>小</div>
+      </div>
+    </section>
+
+    <section class="proof-strip" aria-label="能力概览">
+      <div><b>本地持久化</b><span>会话、作品、角色卡都留在设备上</span></div>
+      <div><b>流式生成</b><span>章节和语C接话逐字出现</span></div>
+      <div><b>DeepSeek Pro</b><span>支持思考模式折叠展示</span></div>
+    </section>
+
+    <section id="flow" class="flow section">
+      <div class="section-head">
+        <p class="eyebrow">WORKFLOW</p>
+        <h2>不是聊天框，是一间写作工坊。</h2>
+      </div>
+      <div class="steps">
+        <article>
+          <span>01</span>
+          <h3>收集闪念</h3>
+          <p>对白、画面、伏笔先丢进捕风页，等你回到书房再整理。</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h3>Agent 捋清故事</h3>
+          <p>墨小会追问题材、人物、章节规模，也能直接生成标题和大纲。</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h3>入库成书</h3>
+          <p>规划结果一键进入书房，后续按章节续写、阅读、导出。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="roleplay" class="roleplay section">
+      <div class="role-card">
+        <p class="eyebrow">ROLEPLAY MODE</p>
+        <h2>纯语C，不弹卡，不打断。</h2>
+        <p>打开语C模式后，文舒会跳过箱庭式规划，直接依据 AI 角色卡和全局用户角色接戏。摄像机视角、旁白、动作、内心这些导演指令，也会被识别成写作操作，而不是角色台词。</p>
+      </div>
+      <div class="command-board">
+        <span>{摄像机视角：正面到侧面}</span>
+        <span>{描写画面}</span>
+        <span>{推进剧情}</span>
+        <span>{内心：}</span>
+      </div>
+    </section>
+
+    <section class="features section">
+      <div class="feature">
+        <h3>角色卡</h3>
+        <p>AI 角色可随时切换；你的角色是全局身份，所有语C会话共享。</p>
+      </div>
+      <div class="feature">
+        <h3>提示词</h3>
+        <p>全局提示词会拼接到每次模型调用，让写作口吻长期稳定。</p>
+      </div>
+      <div class="feature">
+        <h3>附件解析</h3>
+        <p>MD、TXT、DOC/DOCX 可作为参考材料加入当前创作上下文。</p>
+      </div>
+    </section>
+
+    <section id="download" class="download section">
+      <p class="eyebrow">ANDROID DEBUG BUILD</p>
+      <h2>现在就把文舒装进手机。</h2>
+      <p>当前版本 <b>5.12</b>。项目仍在快速迭代，适合愿意一起打磨体验的创作者。</p>
+      <a class="seal-btn" href="https://github.com/wuliaoshuang/wenshu" rel="noopener">前往 GitHub</a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>文舒 · WENSHU</span>
+    <span>写作不是孤独劳动，是和故事互相照亮。</span>
+  </footer>
+
+  <script src="/script.js"></script>
+</body>
+</html>

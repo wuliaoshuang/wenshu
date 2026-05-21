@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>我的角色卡 · 文舒</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/app.css">
+<script src="../cordova.js"></script>
+<script src="../js/boot.js"></script>
+</head>
+<body class="role-cards-page">
+  <a class="ghost tl" href="index.html" data-back-fallback="index.html" aria-label="返回">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
+  </a>
+  <a class="ghost tr" href="settings.html" aria-label="设置">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+    </svg>
+  </a>
+
+  <main class="role-cards-shell">
+    <header class="role-cards-head">
+      <h1>我 的 角 色 卡</h1>
+      <p>AI 角色可以建很多张；我的角色只有一张，全局共用。</p>
+    </header>
+
+    <section class="role-cards-layout">
+      <aside class="role-cards-list">
+        <div class="rc-list-head">
+          <span>AI 角 色</span>
+          <button id="new-ai-card" type="button">+ 新 建</button>
+        </div>
+        <ul id="ai-card-list"></ul>
+        <button id="edit-user-card" class="user-card-entry" type="button">
+          <span class="role-card-avatar" id="user-card-avatar">我</span>
+          <span>
+            <b>我 的 角 色</b>
+            <small>全局用户角色</small>
+          </span>
+        </button>
+      </aside>
+
+      <section class="role-cards-editor">
+        <div class="rc-editor-head">
+          <div>
+            <h2 id="editor-title">新 AI 角色</h2>
+            <p id="editor-subtitle">这张卡可在纯语C会话里随时切换</p>
+          </div>
+          <button id="delete-card" type="button">删 除</button>
+        </div>
+        <div class="role-card-import">
+          <textarea id="ai-seed" rows="3" placeholder="写一点角色方向，让 AI 帮你补全。"></textarea>
+          <div class="role-card-import-actions">
+            <button id="ai-generate" type="button">AI 生 成</button>
+          </div>
+          <textarea id="json-box" rows="4" placeholder='粘贴 JSON，例如 {"角色名称":"墨小","说话风格":"短句，克制"}'></textarea>
+          <div class="role-card-import-actions">
+            <button id="json-file-btn" type="button">选 择 JSON 文 件</button>
+            <input id="json-file" type="file" accept=".json,application/json" hidden>
+            <button id="json-import" type="button">导 入 JSON</button>
+            <button id="json-clear" type="button">清 空</button>
+          </div>
+        </div>
+        <form id="card-form" class="role-card-form"></form>
+        <footer class="role-card-foot">
+          <button id="clear-form" type="button">清 空 表 单</button>
+          <button id="save-card" type="button">保 存</button>
+        </footer>
+      </section>
+    </section>
+  </main>
+
+  <script type="module">
+    import {
+      listAiRoleCards, getAiRoleCard, saveAiRoleCard, deleteAiRoleCard,
+      getUserRoleCard, setUserRoleCard, flushAgent,
+    } from '../js/store.js';
+    import { chat, parseJson } from '../js/deepseek.js';
+    import { bindGlobalTapVibration, bindBackButtons, confirmDialog, requireApiKey, toast, vibrate, $ } from '../js/utils.js';
+    import {
+      ROLE_CARD_FIELDS, createEmptyRoleCard, normalizeRoleCard, mergeRoleCard,
+      parseRoleCardJson, roleCardDisplayName, roleCardInitial, roleCardAiPrompt,
+    } from '../js/role-card.js';
+
+    bindGlobalTapVibration();
+    bindBackButtons();
+    window.addEventListener('pagehide', flushAgent);
+    window.addEventListener('beforeunload', flushAgent);
+    let mode = 'ai';
+    let currentId = null;
+    let working = createEmptyRoleCard();
+
+    const $list = $('#ai-card-list');
+    const $form = $('#card-form');
+    const $title = $('#editor-title');
+    const $subtitle = $('#editor-subtitle');
+    const $delete = $('#delete-card');
+    const $new = $('#new-ai-card');
+    const $userEntry = $('#edit-user-card');
+    const $userAvatar = $('#user-card-avatar');
+    const $save = $('#save-card');
+    const $clear = $('#clear-form');
+    const $seed = $('#ai-seed');
+    const $ai = $('#ai-generate');
+    const $json = $('#json-box');
+    const $jsonImport = $('#json-import');
+    const $jsonClear = $('#json-clear');
+    const $jsonFileBtn = $('#json-file-btn');
+    const $jsonFile = $('#json-file');
+
+    function escapeHtml(s) { return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+    function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+    function renderList() {
+      const cards = listAiRoleCards();
+      $list.innerHTML = cards.map((card) => `
+        <li>
+          <button type="button" class="${card.id === currentId && mode === 'ai' ? 'current' : ''}" data-id="${card.id}">
+            <span class="role-card-avatar">${escapeHtml(roleCardInitial(card))}</span>
+            <span><b>${escapeHtml(roleCardDisplayName(card) || '未命名角色')}</b><small>${escapeHtml(card.identity || 'AI 角色')}</small></span>
+          </button>
+        </li>`).join('');
+      if (!cards.length) $list.innerHTML = '<li class="rc-empty">还没有 AI 角色卡</li>';
+      $userAvatar.textContent = roleCardInitial(getUserRoleCard(), '我');
+    }
+
+    function renderForm() {
+      working = normalizeRoleCard(working);
+      $title.textContent = mode === 'user' ? '我 的 角 色' : (roleCardDisplayName(working) || '新 AI 角色');
+      $subtitle.textContent = mode === 'user' ? '用户角色是全局设定，所有纯语C会话共用' : 'AI 角色可在 Agent 纯语C里随时切换';
+      $delete.hidden = mode === 'user' || !currentId;
+      const fields = ROLE_CARD_FIELDS.map((field) => {
+        const value = escapeAttr(working[field.key] || '');
+        const control = field.multiline
+          ? `<textarea name="${field.key}" rows="3" placeholder="${escapeAttr(field.placeholder || '')}">${value}</textarea>`
+          : `<input name="${field.key}" type="text" value="${value}" placeholder="${escapeAttr(field.placeholder || '')}">`;
+        return `<label class="role-card-field"><span>${escapeHtml(field.label)}</span>${control}</label>`;
+      }).join('');
+      const examples = working.examples.map((ex, i) => `
+        <div class="role-card-example">
+          <b>示 例 ${i + 1}</b>
+          <input name="example_${i}_scene" type="text" value="${escapeAttr(ex.scene)}" placeholder="场景">
+          <textarea name="example_${i}_correct" rows="2" placeholder="正确回应">${escapeAttr(ex.correct)}</textarea>
+          <textarea name="example_${i}_wrong" rows="2" placeholder="错误回应">${escapeAttr(ex.wrong)}</textarea>
+        </div>`).join('');
+      const backgrounds = working.backgrounds.map((bg, i) => `
+        <label class="role-card-field"><span>背景碎片 ${i + 1}</span>
+          <textarea name="background_${i}" rows="2" placeholder="补充背景">${escapeAttr(bg)}</textarea>
+        </label>`).join('');
+      $form.innerHTML = `
+        <section class="role-card-section"><h3>核心参数表</h3><div class="role-card-grid">${fields}</div></section>
+        <section class="role-card-section"><h3>对话示例</h3><div class="role-card-examples">${examples}</div></section>
+        <section class="role-card-section"><h3>补充背景</h3><div class="role-card-grid">${backgrounds}</div></section>
+        <section class="role-card-section"><h3>自定义补充规则</h3><textarea name="customRules" rows="4" placeholder="额外规则，会拼到角色卡末尾">${escapeAttr(working.customRules || '')}</textarea></section>`;
+    }
+
+    function readForm() {
+      const fd = new FormData($form);
+      const card = createEmptyRoleCard();
+      for (const field of ROLE_CARD_FIELDS) card[field.key] = (fd.get(field.key) || '').toString().trim();
+      card.examples = [0, 1, 2].map((i) => ({
+        scene: (fd.get(`example_${i}_scene`) || '').toString().trim(),
+        correct: (fd.get(`example_${i}_correct`) || '').toString().trim(),
+        wrong: (fd.get(`example_${i}_wrong`) || '').toString().trim(),
+      }));
+      card.backgrounds = [0, 1, 2, 3].map((i) => (fd.get(`background_${i}`) || '').toString().trim());
+      card.customRules = (fd.get('customRules') || '').toString().trim();
+      return normalizeRoleCard(card);
+    }
+
+    function selectAi(id) {
+      mode = 'ai';
+      currentId = id || null;
+      working = id ? normalizeRoleCard(getAiRoleCard(id)) : createEmptyRoleCard();
+      renderList();
+      renderForm();
+    }
+    function selectUser() {
+      mode = 'user';
+      currentId = null;
+      working = normalizeRoleCard(getUserRoleCard());
+      renderList();
+      renderForm();
+    }
+
+    $list.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-id]');
+      if (btn) selectAi(btn.dataset.id);
+    });
+    $new.addEventListener('click', () => selectAi(null));
+    $userEntry.addEventListener('click', selectUser);
+    $save.addEventListener('click', () => {
+      working = readForm();
+      if (mode === 'user') {
+        setUserRoleCard(working);
+        toast('我的角色已保存', 'success');
+      } else {
+        const saved = saveAiRoleCard(working, currentId);
+        currentId = saved.id;
+        working = normalizeRoleCard(getAiRoleCard(currentId) || saved);
+        toast('AI 角色已保存', 'success');
+      }
+      vibrate('ok');
+      renderList();
+      renderForm();
+    });
+    $delete.addEventListener('click', async () => {
+      if (!currentId) return;
+      const ok = await confirmDialog('删除这张 AI 角色卡？已使用它的会话会保留当时的角色快照。', { okLabel: '删 除', cancelLabel: '取 消' });
+      if (!ok) return;
+      deleteAiRoleCard(currentId);
+      selectAi(null);
+      toast('已删除角色卡', 'success');
+    });
+    $clear.addEventListener('click', () => {
+      working = createEmptyRoleCard();
+      renderForm();
+    });
+    $jsonImport.addEventListener('click', () => {
+      try {
+        working = mergeRoleCard(readForm(), parseRoleCardJson($json.value));
+        renderForm();
+        toast('JSON 已导入', 'success');
+      } catch (e) {
+        toast(e.message || String(e), 'error');
+      }
+    });
+    $jsonClear.addEventListener('click', () => { $json.value = ''; });
+    $jsonFileBtn.addEventListener('click', () => {
+      $jsonFile.value = '';
+      $jsonFile.click();
+    });
+    $jsonFile.addEventListener('change', async () => {
+      const file = $jsonFile.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        working = mergeRoleCard(readForm(), parseRoleCardJson(text));
+        $json.value = text;
+        renderForm();
+        toast('JSON 文件已导入', 'success');
+      } catch (e) {
+        toast('导入失败：' + (e.message || e), 'error');
+      }
+    });
+    $ai.addEventListener('click', async () => {
+      if (!requireApiKey()) return;
+      try {
+        $ai.disabled = true;
+        $ai.textContent = '生 成 中';
+        const raw = await chat(roleCardAiPrompt($seed.value, mode), { jsonMode: true, temperature: 0.75 });
+        working = mergeRoleCard(readForm(), parseRoleCardJson(raw));
+        renderForm();
+        toast('AI 已填好草稿', 'success');
+      } catch (e) {
+        toast('AI 生成失败：' + (e.message || e), 'error');
+      } finally {
+        $ai.disabled = false;
+        $ai.textContent = 'AI 生 成';
+      }
+    });
+
+    renderList();
+    selectAi(listAiRoleCards()[0]?.id || null);
+  </script>
+</body>
+</html>

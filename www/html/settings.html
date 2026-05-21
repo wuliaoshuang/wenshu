@@ -1,0 +1,1320 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>砚 · 文舒</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/app.css">
+<script src="../cordova.js"></script>
+<script src="../js/boot.js"></script>
+<style>
+  html, body { width: 100%; min-height: 100%; }
+  body {
+    background:
+      linear-gradient(180deg, color-mix(in oklab, var(--paper) 94%, white), var(--paper));
+  }
+  .settings {
+    width: min(820px, 100%);
+    margin: 0 auto;
+    padding: calc(72px + env(safe-area-inset-top, 0px)) 22px calc(112px + env(safe-area-inset-bottom, 0px));
+  }
+  .settings h1 {
+    font-family: var(--font-mincho);
+    font-size: clamp(25px, 5vw, 34px);
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    margin: 0;
+    line-height: 1.2;
+    text-align: center;
+  }
+  .settings .lede {
+    width: min(36em, 100%);
+    margin: 12px auto 28px;
+    font-family: var(--font-mincho);
+    font-size: 13px;
+    line-height: 1.85;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    text-align: center;
+  }
+  .account-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 20px;
+    padding: 16px 18px;
+    border: 1px solid var(--hairline-soft, var(--paper-edge));
+    border-radius: 16px;
+    background: color-mix(in oklab, var(--paper) 94%, white);
+    box-shadow: 0 16px 42px -34px rgba(28,26,22,.38);
+  }
+  .account-card .avatar {
+    flex: 0 0 46px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mincho);
+    font-size: 18px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+  }
+  .account-card .name {
+    font-family: var(--font-mincho);
+    font-size: 16px;
+    color: var(--ink);
+    letter-spacing: 0.12em;
+  }
+  .account-card .sub {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-ghost);
+    letter-spacing: 0.14em;
+    margin-top: 3px;
+  }
+  .group {
+    margin: 0 0 18px;
+    border: 1px solid var(--hairline-soft, var(--paper-edge));
+    border-radius: 16px;
+    overflow: hidden;
+    background: color-mix(in oklab, var(--paper) 96%, white);
+    box-shadow: 0 18px 46px -38px rgba(28,26,22,.36);
+  }
+  .group-title {
+    min-height: 44px;
+    padding: 13px 18px 11px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--hairline-soft, var(--paper-edge));
+    background: color-mix(in oklab, var(--paper-deep) 52%, var(--paper));
+    font-family: var(--font-mincho);
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    color: var(--ink);
+  }
+  .group-title .note {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    color: var(--ink-ghost);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 128px minmax(0, 1fr);
+    gap: 18px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--hairline-soft, var(--paper-edge));
+    align-items: center;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row .label {
+    font-family: var(--font-mincho);
+    font-size: 13px;
+    color: var(--ink-soft);
+    letter-spacing: 0.14em;
+  }
+  .row .val {
+    min-width: 0;
+    font-family: var(--font-mincho);
+    font-size: 14px;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+  }
+  .row .val .hint,
+  .hint {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: var(--ink-ghost);
+    letter-spacing: 0.02em;
+    margin-top: 7px;
+  }
+  .key-input,
+  #global-prompt {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border: 1px solid var(--hairline-soft, var(--paper-edge)) !important;
+    border-radius: 12px !important;
+    background: color-mix(in oklab, var(--paper) 96%, white) !important;
+    color: var(--ink) !important;
+    outline: none !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.38) !important;
+  }
+  .key-input {
+    height: 42px;
+    padding: 0 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  #global-prompt {
+    min-height: 188px !important;
+    padding: 13px 14px !important;
+    font-family: var(--font-mincho) !important;
+    font-size: 13.5px !important;
+    line-height: 1.85 !important;
+    letter-spacing: 0.04em !important;
+    resize: vertical !important;
+  }
+  .key-input:focus,
+  #global-prompt:focus {
+    border-color: color-mix(in oklab, var(--vermilion) 75%, var(--paper-edge)) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.42),
+      0 0 0 3px color-mix(in oklab, var(--vermilion) 12%, transparent) !important;
+  }
+  .tagset {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tagset button,
+  .seg button,
+  .stepper-num button,
+  .btn-quiet,
+  .danger-zone button {
+    min-height: 36px;
+    border-radius: 10px;
+  }
+  .tagset button {
+    font-family: var(--font-mincho);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    padding: 7px 12px;
+    border: 1px solid var(--hairline-soft, var(--paper-edge));
+    color: var(--ink-faint);
+    background: var(--paper);
+  }
+  .tagset button[aria-selected="true"] {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .seg {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    border: 1px solid var(--hairline-soft, var(--paper-edge));
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .seg button {
+    padding: 9px 10px;
+    border-right: 1px solid var(--hairline-soft, var(--paper-edge));
+    font-family: var(--font-mincho);
+    font-size: 12px;
+    letter-spacing: 0.13em;
+    color: var(--ink-faint);
+  }
+  .seg button:last-child { border-right: 0; }
+  .seg button[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .stepper-num {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    font-family: var(--font-mincho);
+  }
+  .stepper-num button {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--hairline-soft, var(--paper-edge));
+    color: var(--ink-soft);
+    background: var(--paper);
+    font-size: 17px;
+  }
+  .stepper-num .n {
+    min-width: 44px;
+    text-align: center;
+    font-size: 19px;
+    color: var(--ink);
+  }
+  .toggle {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--paper-edge);
+    border: 1px solid var(--paper-edge);
+    position: relative;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+  }
+  .toggle::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--paper);
+    top: 2px;
+    left: 2px;
+    box-shadow: 0 2px 8px rgba(28,26,22,.14);
+    transition: transform .2s ease;
+  }
+  .toggle.on {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+  .toggle.on::after { transform: translateX(18px); }
+  .danger-zone {
+    margin-top: 22px;
+    padding: 18px;
+    border: 1px dashed color-mix(in oklab, var(--vermilion) 42%, var(--paper-edge));
+    border-radius: 16px;
+    background: color-mix(in oklab, var(--vermilion) 4%, var(--paper));
+  }
+  .danger-zone h4 {
+    margin: 0 0 12px;
+    font-family: var(--font-mincho);
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    color: var(--vermilion);
+  }
+  .danger-zone button {
+    padding: 8px 14px;
+    border: 1px solid var(--vermilion);
+    color: var(--vermilion);
+    background: transparent;
+    font-family: var(--font-mincho);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+  }
+  .danger-zone button:hover {
+    background: var(--vermilion);
+    color: var(--paper);
+  }
+  .signoff {
+    margin-top: 34px;
+    text-align: center;
+    font-family: var(--font-mincho);
+    font-size: 12px;
+    color: var(--ink-ghost);
+    letter-spacing: 0.22em;
+  }
+  .signoff small {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+  }
+  .save-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    min-height: 58px;
+    padding: 10px max(18px, env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-right));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: 1px solid var(--hairline-soft, var(--paper-edge));
+    background: color-mix(in oklab, var(--paper) 92%, white);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 -18px 46px -38px rgba(28,26,22,.52);
+  }
+  .save-bar .actions { display: flex; gap: 12px; align-items: center; }
+  .save-bar .actions a {
+    font-family: var(--font-mincho) !important;
+    font-size: 13px !important;
+    color: var(--ink) !important;
+    letter-spacing: 0.08em !important;
+    border-bottom: 1px solid var(--ink) !important;
+    padding-bottom: 2px !important;
+  }
+
+  @media (max-width: 680px) {
+    .settings {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    .settings h1 { text-align: left; }
+    .settings .lede {
+      margin-left: 0;
+      text-align: left;
+    }
+    .row {
+      grid-template-columns: 1fr;
+      gap: 9px;
+      padding: 15px 14px;
+    }
+    .row .label {
+      color: var(--ink-ghost);
+      font-size: 12px;
+    }
+    .group-title {
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+    .seg {
+      grid-auto-flow: row;
+      grid-auto-columns: auto;
+    }
+    .seg button {
+      border-right: 0;
+      border-bottom: 1px solid var(--hairline-soft, var(--paper-edge));
+    }
+    .seg button:last-child { border-bottom: 0; }
+    .stepper-num {
+      flex-wrap: wrap;
+    }
+    .save-bar {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 6px;
+    }
+  }
+
+  /* 纸面洒脱版：设置要清楚，但不要像后台面板 */
+  body {
+    background:
+      linear-gradient(90deg, rgba(255,255,255,.18), transparent 14%, transparent 86%, rgba(255,255,255,.12)),
+      radial-gradient(circle at 86% 5%, color-mix(in oklab, var(--vermilion) 5%, transparent) 0 12%, transparent 30%),
+      var(--paper);
+  }
+  .settings {
+    max-width: 760px;
+    padding-top: calc(82px + env(safe-area-inset-top, 0px));
+  }
+  .settings h1 {
+    text-align: left;
+    font-size: clamp(29px, 7vw, 42px);
+    letter-spacing: 0.2em;
+  }
+  .settings h1::after {
+    content: "";
+    display: block;
+    width: 42px;
+    height: 2px;
+    margin-top: 16px;
+    background: var(--vermilion);
+  }
+  .settings .lede {
+    margin: 16px 0 34px;
+    text-align: left;
+    max-width: 34em;
+  }
+  .account-card {
+    margin-bottom: 38px;
+    padding: 0 0 20px;
+    border: 0;
+    border-bottom: 1px solid var(--paper-edge);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .account-card .avatar {
+    background: var(--vermilion);
+    border-radius: 4px;
+  }
+  .group {
+    position: relative;
+    margin-bottom: 38px;
+    padding-left: 18px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+  .group::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 6px;
+    width: 1px;
+    background: linear-gradient(var(--vermilion), var(--paper-edge) 22%, transparent);
+  }
+  .group-title {
+    min-height: 0;
+    padding: 0 0 12px;
+    border-bottom: 1px solid var(--paper-edge);
+    background: transparent;
+    color: var(--ink);
+    letter-spacing: 0.24em;
+  }
+  .group-title .note {
+    opacity: .72;
+  }
+  .row {
+    grid-template-columns: 118px minmax(0, 1fr);
+    padding: 17px 0;
+    border-bottom-color: color-mix(in oklab, var(--paper-edge) 70%, transparent);
+  }
+  .row .label {
+    color: var(--ink-ghost);
+  }
+  .key-input,
+  #global-prompt {
+    border-radius: 0 !important;
+    border-width: 0 0 1px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .key-input {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  #global-prompt {
+    padding: 12px 0 !important;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 28px,
+        color-mix(in oklab, var(--paper-edge) 42%, transparent) 29px
+      ) !important;
+  }
+  .key-input:focus,
+  #global-prompt:focus {
+    border-color: var(--vermilion) !important;
+    box-shadow: none !important;
+  }
+  .tagset button,
+  .stepper-num button,
+  .btn-quiet,
+  .danger-zone button {
+    border-radius: 0;
+    background: transparent;
+  }
+  .tagset button {
+    padding: 6px 10px;
+  }
+  .tagset button[aria-selected="true"] {
+    background: var(--ink);
+  }
+  .seg {
+    border-radius: 0;
+    background: transparent;
+  }
+  .seg button {
+    border-radius: 0;
+  }
+  .toggle {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .danger-zone {
+    margin-left: 18px;
+    border-radius: 0;
+    background: transparent;
+  }
+  .save-bar {
+    background: color-mix(in oklab, var(--paper) 86%, transparent);
+    box-shadow: none;
+  }
+
+  @media (max-width: 680px) {
+    .settings {
+      padding-top: calc(72px + env(safe-area-inset-top, 0px));
+    }
+    .group {
+      padding-left: 14px;
+    }
+    .row {
+      grid-template-columns: 1fr;
+      padding: 16px 0;
+    }
+  }
+
+  .account-card,
+  .group,
+  .danger-zone,
+  .key-input,
+  #global-prompt,
+  .seg,
+  .tagset button,
+  .stepper-num button,
+  .btn-quiet {
+    border-radius: 4px !important;
+  }
+
+  .settings-page::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: .34;
+    background:
+      linear-gradient(color-mix(in oklab, var(--paper-edge) 38%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklab, var(--paper-edge) 32%, transparent) 1px, transparent 1px),
+      linear-gradient(color-mix(in oklab, var(--vermilion) 8%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklab, var(--vermilion) 6%, transparent) 1px, transparent 1px);
+    background-size: 34px 34px, 34px 34px, 136px 136px, 136px 136px;
+    background-position: center top;
+    mask-image: linear-gradient(to bottom, transparent 0, #000 82px, #000 calc(100% - 82px), transparent);
+  }
+
+  .settings-page > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .settings-page > .ghost.tl {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    left: 8px;
+    right: auto;
+    z-index: 80;
+  }
+
+  .settings-page .group,
+  .settings-page .account-card,
+  .settings-page .danger-zone {
+    background: color-mix(in oklab, var(--paper) 62%, transparent);
+  }
+
+  .settings-page .save-bar {
+    background: color-mix(in oklab, var(--paper) 82%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Settings spacing final pass */
+  .settings-page .settings {
+    width: min(760px, 100%);
+    padding:
+      calc(98px + env(safe-area-inset-top, 0px))
+      clamp(22px, 6vw, 44px)
+      calc(136px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .settings-page .settings h1 {
+    margin-bottom: 0;
+  }
+
+  .settings-page .settings .lede {
+    margin: 18px 0 40px;
+    max-width: 32em;
+  }
+
+  .settings-page .account-card {
+    margin-bottom: 44px;
+    padding-bottom: 22px;
+  }
+
+  .settings-page .group {
+    margin-bottom: 44px;
+    padding-left: 20px;
+  }
+
+  .settings-page .group-title {
+    padding-bottom: 14px;
+    margin-bottom: 2px;
+  }
+
+  .settings-page .row {
+    grid-template-columns: 124px minmax(0, 1fr);
+    gap: 22px;
+    padding: 18px 0;
+  }
+
+  .settings-page .row .label {
+    padding-top: 2px;
+  }
+
+  .settings-page .tagset {
+    gap: 9px 8px;
+  }
+
+  .settings-page .seg {
+    max-width: 560px;
+  }
+
+  .settings-page .danger-zone {
+    margin: 6px 0 36px 20px;
+    padding: 18px 0 0;
+  }
+
+  .settings-page .signoff {
+    margin-top: 42px;
+    margin-bottom: 0;
+  }
+
+  .settings-page .save-bar {
+    min-height: 64px;
+    padding:
+      12px
+      max(22px, env(safe-area-inset-left))
+      calc(12px + env(safe-area-inset-bottom, 0px))
+      max(22px, env(safe-area-inset-right));
+  }
+
+  @media (max-width: 680px) {
+    .settings-page .settings {
+      padding:
+        calc(86px + env(safe-area-inset-top, 0px))
+        20px
+        calc(156px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .settings-page .settings .lede {
+      margin-bottom: 34px;
+    }
+
+    .settings-page .account-card {
+      margin-bottom: 34px;
+    }
+
+    .settings-page .group {
+      margin-bottom: 36px;
+      padding-left: 16px;
+    }
+
+    .settings-page .row {
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 17px 0;
+    }
+
+    .settings-page .danger-zone {
+      margin-left: 16px;
+      margin-bottom: 32px;
+    }
+  }
+
+  /* Settings card spacing + detached save bar */
+  .settings-page {
+    --settings-pad-x: clamp(22px, 6vw, 42px);
+    --settings-save-h: 72px;
+  }
+
+  .settings-page .settings {
+    padding:
+      calc(98px + env(safe-area-inset-top, 0px))
+      var(--settings-pad-x)
+      calc(var(--settings-save-h) + 64px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .settings-page .group {
+    padding-left: 18px;
+    margin-bottom: 42px;
+  }
+
+  .settings-page .group-title {
+    padding: 0 0 13px;
+    margin: 0;
+  }
+
+  .settings-page .row {
+    grid-template-columns: 122px minmax(0, 1fr);
+    gap: 20px;
+    padding: 16px 0;
+    min-height: 66px;
+  }
+
+  .settings-page .row[style*="align-items: start"] {
+    padding-top: 18px;
+    padding-bottom: 20px;
+  }
+
+  .settings-page .row .label {
+    align-self: start;
+    padding-top: 7px;
+  }
+
+  .settings-page .row .val {
+    align-self: center;
+  }
+
+  .settings-page .tagset,
+  .settings-page .stepper-num,
+  .settings-page .seg {
+    margin: 1px 0;
+  }
+
+  .settings-page .account-card {
+    padding: 0 0 22px;
+  }
+
+  .settings-page .danger-zone {
+    margin: 4px 0 38px 18px;
+    padding: 18px 0 0;
+  }
+
+  .settings-page .save-bar {
+    position: fixed;
+    left: max(16px, env(safe-area-inset-left));
+    right: max(16px, env(safe-area-inset-right));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    min-height: 52px;
+    padding: 10px 14px;
+    border: 1px solid color-mix(in oklab, var(--paper-edge) 80%, transparent);
+    border-radius: 8px;
+    background: color-mix(in oklab, var(--paper) 88%, transparent);
+    box-shadow: 0 14px 40px -30px rgba(28, 26, 22, .45);
+  }
+
+  @media (max-width: 680px) {
+    .settings-page {
+      --settings-pad-x: 20px;
+      --settings-save-h: 92px;
+    }
+
+    .settings-page .settings {
+      padding:
+        calc(86px + env(safe-area-inset-top, 0px))
+        var(--settings-pad-x)
+        calc(var(--settings-save-h) + 66px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .settings-page .group {
+      padding-left: 14px;
+      margin-bottom: 36px;
+    }
+
+    .settings-page .row {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      min-height: 0;
+      padding: 15px 0 16px;
+    }
+
+    .settings-page .row .label {
+      padding-top: 0;
+    }
+
+    .settings-page .save-bar {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 6px;
+      left: 12px;
+      right: 12px;
+      bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  /* Settings card inner padding final correction */
+  .settings-page {
+    --settings-card-x: 20px;
+    --settings-card-y: 18px;
+    --settings-row-y: 15px;
+  }
+
+  .settings-page .account-card {
+    padding: var(--settings-card-y) var(--settings-card-x) !important;
+    margin-bottom: 28px;
+    border: 1px solid color-mix(in oklab, var(--paper-edge) 70%, transparent);
+    background: color-mix(in oklab, var(--paper) 72%, transparent);
+  }
+
+  .settings-page .group {
+    padding: var(--settings-card-y) var(--settings-card-x) !important;
+    margin-bottom: 24px;
+    border: 1px solid color-mix(in oklab, var(--paper-edge) 70%, transparent);
+    background: color-mix(in oklab, var(--paper) 72%, transparent);
+  }
+
+  .settings-page .group::before {
+    display: none;
+  }
+
+  .settings-page .group-title {
+    padding: 0 0 14px !important;
+    margin: 0;
+    border-bottom: 1px solid color-mix(in oklab, var(--paper-edge) 70%, transparent);
+  }
+
+  .settings-page .row {
+    grid-template-columns: 116px minmax(0, 1fr);
+    gap: 18px;
+    min-height: 0;
+    padding: var(--settings-row-y) 0 !important;
+  }
+
+  .settings-page .row:last-child {
+    padding-bottom: 0 !important;
+  }
+
+  .settings-page .row .label {
+    padding-top: 5px;
+  }
+
+  .settings-page .row[style] {
+    grid-template-columns: 116px minmax(0, 1fr) !important;
+  }
+
+  .settings-page .danger-zone {
+    margin: 28px 0 36px;
+    padding: var(--settings-card-y) var(--settings-card-x) !important;
+    border: 1px dashed color-mix(in oklab, var(--vermilion) 42%, var(--paper-edge));
+    background: color-mix(in oklab, var(--paper) 66%, transparent);
+  }
+
+  @media (max-width: 680px) {
+    .settings-page {
+      --settings-card-x: 16px;
+      --settings-card-y: 16px;
+      --settings-row-y: 14px;
+    }
+
+    .settings-page .account-card {
+      margin-bottom: 24px;
+    }
+
+    .settings-page .group {
+      margin-bottom: 22px;
+    }
+
+    .settings-page .row,
+    .settings-page .row[style] {
+      grid-template-columns: 1fr !important;
+      gap: 8px;
+    }
+
+    .settings-page .row .label {
+      padding-top: 0;
+    }
+  }
+</style>
+</head>
+<body class="settings-page">
+  <a class="ghost tl" href="library.html" data-back-fallback="library.html" aria-label="返回">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
+      <path d="M8.5 2.5L4 7l4.5 4.5"/>
+    </svg>
+  </a>
+
+  <div class="settings">
+    <h1>砚 · 写 作 偏 好</h1>
+    <p class="lede">这一砚的水，提前调好。下一部小说立项时，系统会先猜你的口味，再问你。</p>
+
+    <div class="account-card">
+      <div class="avatar" id="avatar">文</div>
+      <div>
+        <div class="name" id="user-name">文舒用户</div>
+        <div class="sub" id="user-sub">WENSHU · v5.12</div>
+      </div>
+    </div>
+
+    <!-- AI 模型 -->
+    <section class="group">
+      <div class="group-title">DeepSeek 接入 <span class="note">REQUIRED</span></div>
+
+      <div class="row">
+        <span class="label">API Key</span>
+        <div class="val">
+          <input id="api-key" class="key-input" type="password" placeholder="sk-..." autocomplete="off">
+          <span class="hint">前端直连 api.deepseek.com，仅存于本机 localStorage。<a href="https://platform.deepseek.com/api_keys" target="_blank" style="color: var(--vermilion); border-bottom: 1px solid var(--vermilion);">前往 DeepSeek 控制台 →</a></span>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label">模型</span>
+        <div class="seg val" data-radio="model">
+          <button data-v="deepseek-v4-flash">v4 · flash</button>
+          <button data-v="deepseek-v4-pro">v4 · pro</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label">连通检测</span>
+        <div class="val">
+          <button id="test-key" class="btn-quiet" style="padding: 6px 14px; font-size: 12px;">点 一 下 试 试</button>
+          <span id="test-result" class="hint"></span>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label">震动测试</span>
+        <div class="val">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn-quiet" data-vib-test="tap" style="padding: 6px 12px; font-size: 12px;">轻 触</button>
+            <button class="btn-quiet" data-vib-test="ok" style="padding: 6px 12px; font-size: 12px;">成 功</button>
+            <button class="btn-quiet" data-vib-test="done" style="padding: 6px 12px; font-size: 12px;">完 成</button>
+            <button class="btn-quiet" data-vib-test="warn" style="padding: 6px 12px; font-size: 12px;">警 告</button>
+            <button class="btn-quiet" data-vib-test="long" style="padding: 6px 12px; font-size: 12px;">长 震</button>
+          </div>
+          <span class="hint" id="vib-hint">点一下感受强度。无感觉则可能系统侧关了振动反馈，或非真机调试。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 全局提示词 -->
+    <section class="group">
+      <div class="group-title">全 局 提 示 词 <span class="note">SYSTEM · prepend</span></div>
+
+      <div class="row" style="grid-template-columns: 110px 1fr; align-items: start;">
+        <span class="label" style="padding-top: 8px;">写作人设</span>
+        <div class="val">
+          <textarea id="global-prompt" rows="10"
+            style="width:100%; box-sizing:border-box; font-family:var(--font-mincho); font-size:13px; line-height:1.85; letter-spacing:0.04em; padding:12px 14px; border:1px solid var(--paper-edge); background:var(--paper); color:var(--ink); resize:vertical; min-height:160px;"
+            placeholder="留空则不注入。这里写的会被前置到所有 AI 调用的 system 消息最前面，用于设定语言/口吻/题材偏好等通用约束。"></textarea>
+          <span class="hint" style="margin-top: 8px;">仅本机保存，不上传任何服务器。修改后立即对下次生成生效。注意：DeepSeek 服务端的安全策略不在 App 控制范围内，过激的 prompt 可能被服务端直接拒绝。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 创作偏好 -->
+    <section class="group">
+      <div class="group-title">创 作 偏 好 <span class="note">PRESET · phase0</span></div>
+
+      <div class="row">
+        <span class="label">惯写题材</span>
+        <div class="tagset val" data-multi="genres">
+          <button data-v="悬疑">悬疑</button>
+          <button data-v="言情">言情</button>
+          <button data-v="奇幻">奇幻</button>
+          <button data-v="科幻">科幻</button>
+          <button data-v="历史">历史</button>
+          <button data-v="惊悚">惊悚</button>
+          <button data-v="都市">都市</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label">惯用主角</span>
+        <div class="tagset val" data-multi="protagonists">
+          <button data-v="单男主">单 男 主</button>
+          <button data-v="单女主">单 女 主</button>
+          <button data-v="双主角">双 主 角</button>
+          <button data-v="群像">群 像</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label">惯用视角</span>
+        <div class="seg val" data-radio="viewpoint">
+          <button data-v="第一人称">第 一 人 称</button>
+          <button data-v="三人称限制">三 人 称 限 制</button>
+          <button data-v="三人称全知">三 人 称 全 知</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label">惯用基调</span>
+        <div class="tagset val" data-multi="tones">
+          <button data-v="冷峻克制">冷峻克制</button>
+          <button data-v="温情治愈">温情治愈</button>
+          <button data-v="荒诞戏谑">荒诞戏谑</button>
+          <button data-v="史诗厚重">史诗厚重</button>
+          <button data-v="悬疑张力">悬疑张力</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label">章节规模</span>
+        <div class="val">
+          <div class="stepper-num">
+            <button id="ch-minus">−</button>
+            <span class="n" id="ch-n">15</span>
+            <button id="ch-plus">+</button>
+            <span class="hint" style="margin-top:0;" id="ch-hint">章 · 约 5 万字 · 中篇</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 默认写作模式 -->
+    <section class="group">
+      <div class="group-title">默 认 写 作 模 式 <span class="note">phase3 · DEFAULT</span></div>
+
+      <div class="row">
+        <span class="label">模式</span>
+        <div class="seg val" data-radio="defaultMode">
+          <button data-v="serial">逐 章 串 行</button>
+          <button data-v="subagent-parallel">子 Agent 并 行</button>
+          <button data-v="agent-teams">Teams 协 作</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label">校验严格度</span>
+        <div class="seg val" data-radio="strictness">
+          <button data-v="tolerant">宽 容</button>
+          <button data-v="standard">标 准</button>
+          <button data-v="strict">严 格</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label">章末双钩</span>
+        <span class="val" style="display:flex;justify-content:space-between;align-items:center;">
+          强制每章保留一个悬念钩
+          <span class="toggle on" data-toggle="forceHook"></span>
+        </span>
+      </div>
+    </section>
+
+    <!-- 阅读 & 排版 -->
+    <section class="group">
+      <div class="group-title">阅 读 · 排 版</div>
+
+      <div class="row">
+        <span class="label">字体</span>
+        <div class="seg val" data-radio="font">
+          <button data-v="mincho">明 朝</button>
+          <button data-v="kaiti">楷 体</button>
+          <button data-v="songti">宋 体</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label">字号</span>
+        <div class="val stepper-num">
+          <button id="fs-minus">−</button>
+          <span class="n" id="fs-n">15</span>
+          <button id="fs-plus">+</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label">竖排</span>
+        <span class="val" style="display:flex;justify-content:space-between;align-items:center;">
+          编辑器可一键切换
+          <span class="toggle" data-toggle="tategaki"></span>
+        </span>
+      </div>
+
+      <div class="row">
+        <span class="label">沉浸</span>
+        <span class="val" style="display:flex;justify-content:space-between;align-items:center;">
+          落笔 4 秒，陈设隐去
+          <span class="toggle on" data-toggle="immersive"></span>
+        </span>
+      </div>
+    </section>
+
+    <!-- 归档 / 同步 -->
+    <section class="group">
+      <div class="group-title">归 档 · 同 步</div>
+
+      <div class="row">
+        <span class="label">本地存储</span>
+        <span class="val mincho" style="font-family:var(--font-mono);font-size:12px;letter-spacing:0.06em;color:var(--ink-soft);">
+          localStorage · wenshu.v1
+          <span class="hint">本机浏览器，关闭无线网络也可写作；可在「书房」逐部导出 .md / .json</span>
+        </span>
+      </div>
+
+      <div class="row">
+        <span class="label">自动续笔</span>
+        <span class="val" style="display:flex;justify-content:space-between;align-items:center;">
+          上次断在哪章，下次直接续上
+          <span class="toggle on" data-toggle="autoResume"></span>
+        </span>
+      </div>
+
+      <div class="row">
+        <span class="label">闪念归档</span>
+        <span class="val" style="display:flex;justify-content:space-between;align-items:center;">
+          自动归入当前在写小说
+          <span class="toggle on" data-toggle="captureInbox"></span>
+        </span>
+      </div>
+    </section>
+
+    <div class="danger-zone">
+      <h4>危 险 区</h4>
+      <button id="reset-all">清 除 所 有 数 据（不 可 撤 销）</button>
+    </div>
+
+    <p class="signoff">
+      文 · 舒<br>
+      <small>WENSHU · v 5.12 · 立 春</small>
+    </p>
+  </div>
+
+  <div class="save-bar">
+    <span class="meta" id="save-status">所 有 变 更 自 动 保 存</span>
+    <div class="actions">
+      <a href="library.html" style="font-family: var(--font-mincho); font-size: 13px; color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 2px; letter-spacing: 0.08em;">回 到 书 房 →</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getPrefs, setPrefs, reset, listNovels } from '../js/store.js';
+    import { chat } from '../js/deepseek.js';
+    import { toast, confirmDialog, $, vibrate, bindGlobalTapVibration, bindBackButtons } from '../js/utils.js';
+
+    bindGlobalTapVibration();
+    bindBackButtons();
+
+    const p = getPrefs();
+
+    // 头像
+    document.getElementById('avatar').textContent = p.user?.name?.slice(0, 1) || '文';
+    document.getElementById('user-name').textContent = p.user?.name || '文舒用户';
+    const inWriting = listNovels().filter((n) => n.status === 'writing').length;
+    const sealed = listNovels().filter((n) => n.status === 'completed').length;
+    document.getElementById('user-sub').textContent = `WENSHU · 在写 ${inWriting} 部 · 已封 ${sealed} 部`;
+
+    // API Key
+    const keyEl = $('#api-key');
+    keyEl.value = p.apiKey || '';
+    keyEl.addEventListener('input', () => {
+      setPrefs({ apiKey: keyEl.value.trim() });
+      markSaved();
+    });
+    keyEl.addEventListener('focus', () => keyEl.type = 'text');
+    keyEl.addEventListener('blur', () => keyEl.type = 'password');
+
+    // 来自门闸跳转：高亮 API Key 行 + 顶部提示
+    if (sessionStorage.getItem('wenshu.needApiKey') === '1') {
+      sessionStorage.removeItem('wenshu.needApiKey');
+      const tip = document.createElement('div');
+      tip.style.cssText = 'margin: 0 0 var(--s-5); padding: 12px 14px; border:1px dashed var(--vermilion); color: var(--vermilion); font-family: var(--font-mincho); font-size: 13px; letter-spacing: 0.06em; line-height: 1.8;';
+      tip.textContent = '需要先填入 DeepSeek API Key，才能进入写作流程。';
+      document.querySelector('.settings').insertBefore(tip, document.querySelector('.account-card').nextSibling);
+      keyEl.focus();
+      keyEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // 全局提示词
+    const gpEl = $('#global-prompt');
+    gpEl.value = p.globalPrompt || '';
+    gpEl.addEventListener('input', () => {
+      setPrefs({ globalPrompt: gpEl.value });
+      markSaved();
+    });
+
+    // 震动测试
+    const vibHint = $('#vib-hint');
+    document.querySelectorAll('[data-vib-test]').forEach((b) => {
+      b.onclick = () => {
+        const level = b.dataset.vibTest;
+        vibrate(level);
+        const hap = !!window.cordova?.plugins?.hapticPlugin;
+        const web = !!navigator?.vibrate;
+        const tags = [];
+        if (hap) tags.push('Native Haptic');
+        if (web) tags.push('Web Vibration');
+        vibHint.textContent = tags.length
+          ? `已触发「${level}」 · 可用通道：${tags.join(' + ')}${hap ? '（系统设置里需开启「触感反馈」才会响）' : ''}`
+          : '当前环境不支持任何震动通道';
+      };
+    });
+
+    // 章节规模
+    let chN = p.chapters || 15;
+    const chNEl = $('#ch-n');
+    const chHint = $('#ch-hint');
+    function renderCh() {
+      chNEl.textContent = chN;
+      let cat = '短篇';
+      if (chN > 8 && chN <= 18) cat = '中篇';
+      else if (chN > 18 && chN <= 30) cat = '长篇';
+      else if (chN > 30) cat = '巨制';
+      const w = Math.round(chN * 4); // 4000字/章估算
+      chHint.textContent = `章 · 约 ${w} 万字 · ${cat}`.replace(/约 (\d+)/, (_, n) => `约 ${(n / 10).toFixed(1)} 万字`).replace('约 0.', '约 0.');
+      // 简化
+      chHint.textContent = `章 · 约 ${(chN * 0.4).toFixed(1)} 万字 · ${cat}`;
+    }
+    renderCh();
+    $('#ch-minus').onclick = () => { chN = Math.max(10, chN - 1); renderCh(); setPrefs({ chapters: chN }); markSaved(); };
+    $('#ch-plus').onclick = () => { chN = Math.min(50, chN + 1); renderCh(); setPrefs({ chapters: chN }); markSaved(); };
+
+    // 字号
+    let fsN = p.fontSize || 15;
+    const fsNEl = $('#fs-n');
+    fsNEl.textContent = fsN;
+    $('#fs-minus').onclick = () => { fsN = Math.max(12, fsN - 1); fsNEl.textContent = fsN; setPrefs({ fontSize: fsN }); markSaved(); };
+    $('#fs-plus').onclick = () => { fsN = Math.min(22, fsN + 1); fsNEl.textContent = fsN; setPrefs({ fontSize: fsN }); markSaved(); };
+
+    // tagset (multi)
+    document.querySelectorAll('[data-multi]').forEach((root) => {
+      const key = root.dataset.multi;
+      const selected = new Set(p[key] || []);
+      root.querySelectorAll('button').forEach((b) => {
+        b.setAttribute('aria-selected', selected.has(b.dataset.v) ? 'true' : 'false');
+        b.onclick = () => {
+          const v = b.dataset.v;
+          if (selected.has(v)) selected.delete(v);
+          else selected.add(v);
+          b.setAttribute('aria-selected', selected.has(v) ? 'true' : 'false');
+          setPrefs({ [key]: [...selected] });
+          markSaved();
+        };
+      });
+    });
+
+    // seg radio
+    document.querySelectorAll('[data-radio]').forEach((root) => {
+      const key = root.dataset.radio;
+      let current = p[key];
+      root.querySelectorAll('button').forEach((b) => {
+        b.setAttribute('aria-pressed', b.dataset.v === current ? 'true' : 'false');
+        b.onclick = () => {
+          current = b.dataset.v;
+          root.querySelectorAll('button').forEach((bb) => bb.setAttribute('aria-pressed', bb.dataset.v === current ? 'true' : 'false'));
+          setPrefs({ [key]: current });
+          markSaved();
+        };
+      });
+    });
+
+    // toggle
+    document.querySelectorAll('[data-toggle]').forEach((t) => {
+      const key = t.dataset.toggle;
+      t.classList.toggle('on', !!p[key]);
+      t.onclick = () => {
+        const next = !t.classList.contains('on');
+        t.classList.toggle('on', next);
+        setPrefs({ [key]: next });
+        markSaved();
+      };
+    });
+
+    // 保存状态提示
+    const status = $('#save-status');
+    let saveTimer;
+    function markSaved() {
+      status.textContent = '已 自 动 保 存 · ' + new Date().toLocaleTimeString('zh-CN', { hour12: false });
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => status.textContent = '所 有 变 更 自 动 保 存', 2400);
+    }
+
+    // 连通测试
+    $('#test-key').onclick = async () => {
+      const btn = $('#test-key');
+      const out = $('#test-result');
+      out.textContent = ''; out.style.color = '';
+      btn.disabled = true;
+      btn.textContent = '联 络 中 …';
+      vibrate('start');
+      try {
+        const reply = await chat(
+          [{ role: 'user', content: '回复一个汉字"在"，仅此一字。' }],
+          { temperature: 0 }
+        );
+        out.style.color = 'oklch(48% 0.08 145)';
+        out.textContent = `通 · 模型回 "${reply.slice(0, 6)}"`;
+        vibrate('ok');
+      } catch (e) {
+        out.style.color = 'var(--vermilion)';
+        out.textContent = `不 通 · ${e.message}`;
+        vibrate('warn');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '点 一 下 试 试';
+      }
+    };
+
+    // 清空
+    $('#reset-all').onclick = async () => {
+      vibrate('warn');
+      const ok = await confirmDialog('清除所有本地数据？此操作不可撤销——所有小说、章节、闪念、设置都会被清空。');
+      if (!ok) return;
+      reset();
+      vibrate('long');
+      toast('已 清 空', 'success');
+      setTimeout(() => location.href = 'library.html', 800);
+    };
+  </script>
+</body>
+</html>

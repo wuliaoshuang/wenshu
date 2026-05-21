@@ -1,0 +1,45 @@
+{
+  "name": "wenshu",
+  "displayName": "文舒",
+  "version": "5.12",
+  "description": "替你听落笔声音的小说工坊",
+  "main": "www/html/index.html",
+  "scripts": {
+    "prepare:android": "cordova platform add android@latest --save",
+    "build:android": "cordova build android",
+    "build:apk": "cordova build android --release",
+    "build:debug": "cordova build android --debug",
+    "run:android": "cordova run android",
+    "clean": "cordova clean android"
+  },
+  "keywords": [
+    "cordova",
+    "novel",
+    "writing",
+    "ai"
+  ],
+  "author": "文舒团队",
+  "license": "MIT",
+  "devDependencies": {
+    "cordova": "^12.0.0",
+    "cordova-android": "^13.0.0",
+    "cordova-ios": "^8.0.1",
+    "cordova-plugin-haptic": "^1.0.0",
+    "cordova-plugin-statusbar": "^4.0.0",
+    "cordova-plugin-vibration": "~3.1.1",
+    "cordova-plugin-x-socialsharing": "~6.0.4",
+    "es6-promise-plugin": "^4.2.2"
+  },
+  "cordova": {
+    "platforms": [
+      "android",
+      "ios"
+    ],
+    "plugins": {
+      "cordova-plugin-vibration": {},
+      "cordova-plugin-statusbar": {},
+      "cordova-plugin-x-socialsharing": {},
+      "cordova-plugin-haptic": {}
+    }
+  }
+}
