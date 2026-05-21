@@ -180,6 +180,24 @@ h3 {
 
 .seal-btn:hover { background: var(--vermilion-deep); }
 
+.paper-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.1rem;
+  padding: .78rem 1.25rem;
+  border: 1px solid rgba(65,51,38,.22);
+  background: rgba(248,241,232,.58);
+  color: var(--ink);
+  font-family: var(--font-mincho);
+  letter-spacing: .16em;
+}
+
+.paper-link:hover {
+  border-color: rgba(174,55,38,.45);
+  color: var(--vermilion);
+}
+
 .ghost-link {
   color: var(--ink-soft);
   border-bottom: 1px solid var(--ink-soft);
@@ -407,6 +425,14 @@ h3 {
   max-width: 34rem;
   margin-left: auto;
   margin-right: auto;
+}
+
+.download-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .9rem;
+  margin-top: 1.6rem;
 }
 
 .footer {
