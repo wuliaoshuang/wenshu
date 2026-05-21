@@ -97,14 +97,14 @@ iOS 发布签名走 [build.json](build.json) 中的 Apple Development Team；上
 
 ## ☁️ 部署到 Vercel
 
-仓库根目录已经包含 [vercel.json](vercel.json)，Vercel 只部署 `landing/` 落地页；Cordova APK 仍只打包 `www/`，不会包含落地页。两种方式部署：
+仓库根目录已经包含 [vercel.json](vercel.json)。Vercel 部署仓库根目录：`/` 会展示 `landing/` 落地页，`/www/html/index.html` 是可体验的 Web App 入口；Cordova APK 仍只打包 `www/`，不会包含落地页。两种方式部署：
 
 ### 方式 1：仪表盘（推荐）
 
 1. 推到 GitHub 之后，进入 [vercel.com/new](https://vercel.com/new)
 2. Import 这个仓库
 3. **Framework Preset** 保持 `Other` 即可
-4. **Build & Output Settings** 全部留空（`vercel.json` 已经声明 `outputDirectory: landing`）
+4. **Build & Output Settings** 全部留空（`vercel.json` 已经声明路由重写）
 5. 点 **Deploy**
 
 ### 方式 2：CLI
@@ -115,7 +115,7 @@ vercel            # 首次部署（预览环境）
 vercel --prod     # 正式环境
 ```
 
-部署完成后访问域名根路径即可进入文舒落地页。
+部署完成后访问域名根路径即可进入文舒落地页，访问 `/www/html/index.html` 可打开线上 Web App。
 
 > ⚠️ **重要**：不要把你自己的 DeepSeek API Key 写进代码里再提交。所有 Key 都通过 App 内"砚"页面由用户自行填入，存在客户端 localStorage 里。
 
