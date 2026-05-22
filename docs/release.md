@@ -31,7 +31,7 @@ base64 -i release.keystore | pbcopy
 
 Android 平台版本固定为 `cordova-android@13.0.0`，不要在 CI 里使用 `android@latest`，否则可能拉到需要更新 Android SDK 常量的预发行/新版本平台，导致 `BAKLAVA`、`VANILLA_ICE_CREAM` 等编译符号找不到。
 
-Cordova Android 13 的 release 默认可能产出 AAB，因此 CI 显式使用 `--packageType=apk` 来生成 GitHub Release 可直接下载的 APK。
+Cordova Android 13 的 release 默认可能产出 AAB，因此 CI 在 `build.android.json` 里显式设置 `packageType: "apk"`，并额外透传 `-- --packageType=apk` 来生成 GitHub Release 可直接下载的 APK。
 
 ## 版本规则
 
