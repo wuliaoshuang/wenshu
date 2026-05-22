@@ -2220,6 +2220,19 @@ body.agent-mode {
 .chapter-bubble .cb-body .md-content {
   white-space: normal;
 }
+.bubble .message-body {
+  display: block;
+  min-height: 0;
+}
+.bubble.ai.awaiting-content .message-body {
+  min-height: 18px;
+}
+.bubble .message-body > .message-loading {
+  display: block;
+  margin: 2px 0 0;
+  transform-origin: center;
+  will-change: transform;
+}
 .bubble .md-content > :first-child,
 .chapter-bubble .cb-body .md-content > :first-child {
   margin-top: 0;
@@ -2368,6 +2381,9 @@ body.agent-mode {
   padding-bottom: 8px;
   border-bottom: 1px solid color-mix(in oklab, var(--paper-edge) 70%, transparent);
   font-family: var(--font-mincho);
+}
+.thinking-fold.is-placeholder {
+  color: var(--ink-ghost);
 }
 .thinking-fold summary {
   width: max-content;

@@ -357,10 +357,15 @@
       const el = document.createElement('div');
       el.className = 'bubble ' + (msg.role === 'user' ? 'user' : 'ai');
       const hasContent = !!String(msg.content || '').trim();
-      el.innerHTML = hasContent ? renderMd(msg.content || '') : renderLoadingDOM(msg);
+      renderBubbleContent(el, {
+        role: msg.role,
+        content: msg.content || '',
+        streaming: !!msg.streaming,
+        thinking: msg.thinking || null,
+        thinkingOpen: false,
+      });
       if (msg.role === 'ai' && msg.streaming && !hasContent) el.classList.add('awaiting-content');
       if (msg.streaming) el.classList.add('streaming-caret');
-      if (msg.thinking) el.prepend(renderThinkingDOM(msg.thinking));
       return el;
     }
 
@@ -392,13 +397,30 @@
       const bubble = document.createElement('div');
       bubble.className = 'bubble ' + (msg.role === 'user' ? 'user' : 'ai');
       const hasContent = !!String(msg.content || '').trim();
-      bubble.innerHTML = hasContent ? renderMd(msg.content || '') : renderLoadingDOM(msg);
+      renderBubbleContent(bubble, {
+        role: msg.role,
+        content: msg.content || '',
+        streaming: !!msg.streaming,
+        thinking: msg.thinking || null,
+        thinkingOpen: ycThinkingOpen,
+      });
       if (msg.role === 'ai' && msg.streaming && !hasContent) bubble.classList.add('awaiting-content');
       if (msg.streaming) bubble.classList.add('streaming-caret');
-      if (msg.thinking && hasContent) bubble.prepend(renderThinkingDOM(msg.thinking));
       if (msg.role === 'user') { wrap.appendChild(bubble); wrap.appendChild(avatar); }
       else { wrap.appendChild(avatar); wrap.appendChild(bubble); }
       return wrap;
+    }
+
+    function renderBubbleContent(bubble, { role, content = '', streaming = false, thinking = null, thinkingOpen = false } = {}) {
+      const hasContent = !!String(content || '').trim();
+      const placeholderThinking = role === 'ai' && streaming && !hasContent && !thinking;
+      const visibleThinking = thinking || (placeholderThinking ? '正在思考…' : null);
+      bubble.innerHTML = '';
+      if (visibleThinking) bubble.appendChild(renderThinkingDOM(visibleThinking, thinkingOpen, placeholderThinking));
+      const body = document.createElement('div');
+      body.className = 'message-body';
+      body.innerHTML = hasContent ? renderMd(content || '') : renderLoadingDOM({ role, streaming });
+      bubble.appendChild(body);
     }
 
     function renderLoadingDOM(msg) {
@@ -407,9 +429,10 @@
         : '';
     }
 
-    function renderThinkingDOM(text, open = false) {
+    function renderThinkingDOM(text, open = false, placeholder = false) {
       const details = document.createElement('details');
       details.className = 'thinking-fold';
+      if (placeholder) details.classList.add('is-placeholder');
       details.open = isYcMode() ? ycThinkingOpen : !!open;
       details.addEventListener('toggle', () => {
         if (syncingThinkingFolds) return;
@@ -459,21 +482,49 @@
       const el = $stream.querySelector(`[data-msg-id="${msgId}"]`);
       if (!el) return;
       const bubble = el.classList.contains('yc-line') ? el.querySelector('.bubble') : el;
-      const existingThinking = thinking === null ? bubble.querySelector('.thinking-body')?.textContent : null;
-      const thinkingWasOpen = isYcMode() ? ycThinkingOpen : !!bubble.querySelector('.thinking-fold')?.open;
+      let body = bubble.querySelector(':scope > .message-body');
+      if (!body) {
+        body = document.createElement('div');
+        body.className = 'message-body';
+        while (bubble.firstChild) body.appendChild(bubble.firstChild);
+        bubble.appendChild(body);
+      }
+      const thinkingFold = bubble.querySelector(':scope > .thinking-fold');
+      const existingThinking = thinking === null && !thinkingFold?.classList.contains('is-placeholder')
+        ? thinkingFold?.querySelector('.thinking-body')?.textContent
+        : null;
+      const thinkingWasOpen = isYcMode() ? ycThinkingOpen : !!thinkingFold?.open;
       const hasContent = !!String(content || '').trim();
       if (hasContent) {
-        bubble.innerHTML = renderMd(content || '');
-      } else if (streaming && !bubble.querySelector('.message-loading')) {
-        bubble.innerHTML = renderLoadingDOM({ role: 'ai', streaming });
+        body.innerHTML = renderMd(content || '');
+      } else if (streaming && !body.querySelector('.message-loading')) {
+        body.innerHTML = renderLoadingDOM({ role: 'ai', streaming });
       } else if (!streaming) {
-        bubble.innerHTML = '';
+        body.innerHTML = '';
       }
       bubble.classList.toggle('streaming-caret', streaming && hasContent);
       bubble.classList.toggle('awaiting-content', streaming && !hasContent);
       const nextThinking = thinking ?? existingThinking;
-      if (nextThinking && hasContent) bubble.prepend(renderThinkingDOM(nextThinking, thinkingWasOpen));
+      const placeholderThinking = streaming && !hasContent && !nextThinking;
+      patchThinkingDOM(bubble, nextThinking || (placeholderThinking ? '正在思考…' : null), thinkingWasOpen, placeholderThinking);
       patchAgentMessage(sessionId, msgId, { content, streaming, ...(nextThinking ? { thinking: nextThinking } : {}) }, isYcMode() ? 'ycMessages' : 'messages');
+    }
+
+    function patchThinkingDOM(bubble, text, open = false, placeholder = false) {
+      const current = bubble.querySelector(':scope > .thinking-fold');
+      if (!text) {
+        if (current) current.remove();
+        return;
+      }
+      if (current) {
+        current.classList.toggle('is-placeholder', !!placeholder);
+        current.open = isYcMode() ? ycThinkingOpen : !!open;
+        const body = current.querySelector('.thinking-body');
+        if (body && body.textContent !== text) body.textContent = text;
+        return;
+      }
+      const body = bubble.querySelector(':scope > .message-body');
+      bubble.insertBefore(renderThinkingDOM(text, open, placeholder), body || bubble.firstChild);
     }
 
     async function pushStreamingBubble(content, { thinking = null } = {}) {
