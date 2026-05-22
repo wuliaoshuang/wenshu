@@ -1,10 +1,14 @@
 {
   "name": "wenshu",
   "displayName": "文舒",
-  "version": "5.12",
+  "version": "5.13",
   "description": "替你听落笔声音的小说工坊",
   "main": "www/html/index.html",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:web": "vite build",
+    "preview": "vite preview",
     "prepare:android": "cordova platform add android@latest --save",
     "build:android": "cordova build android",
     "build:apk": "cordova build android --release",
@@ -28,7 +32,8 @@
     "cordova-plugin-statusbar": "^4.0.0",
     "cordova-plugin-vibration": "~3.1.1",
     "cordova-plugin-x-socialsharing": "~6.0.4",
-    "es6-promise-plugin": "^4.2.2"
+    "es6-promise-plugin": "^4.2.2",
+    "vite": "^8.0.14"
   },
   "cordova": {
     "platforms": [

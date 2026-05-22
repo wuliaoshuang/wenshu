@@ -2,7 +2,7 @@
 
 > 一座替你听落笔声音的小说工坊 · Powered by DeepSeek
 
-文舒是一款面向中文小说创作者的轻量写作工坊，提供从灵感捕捉、章节策划、续写润色，到阅读与导出的完整流程。基于 Cordova 同时构建 Android / iOS 原生包，前端为纯静态站点，也可直接部署到 Web 在浏览器中使用。
+文舒是一款面向中文小说创作者的轻量写作工坊，提供从灵感捕捉、章节策划、续写润色，到阅读与导出的完整流程。基于 Cordova 同时构建 Android / iOS 原生包，前端由 Vite 构建，也可直接部署到 Web 在浏览器中使用。
 
 ---
 
@@ -24,9 +24,18 @@ UI 沿用了水墨 / 宣纸的视觉系统，所有 token 集中在 [www/css/tok
 ## 🧱 技术栈
 
 - **Cordova 12** + cordova-android 13 / cordova-ios 8（原生壳）
-- **原生 Web**：HTML + CSS + ES Modules，**零构建、零打包**
+- **Vite MPA**：HTML + CSS + ES Modules，多页应用构建与开发服务器
 - **AI 后端**：DeepSeek Chat Completions（OpenAI 兼容协议，浏览器直连）
 - **本地存储**：`localStorage`（无服务端，所有数据保存在用户设备）
+
+### 前端框架建议
+
+为了最快迁移，当前保留现有多页 HTML，不立刻重写业务。后续如果要引入框架，推荐 **Vue 3 + Vite**：
+
+- 页面可以按 `www/html/*.html` 逐个改成 Vue 入口，适合现有 MPA 结构
+- 模板语法和当前 DOM 写法接近，迁移成本比 React 更低
+- `store.js`、`deepseek.js`、`prompts.js` 这些业务模块可以先原样复用
+- 角色卡、设置页、Agent 输入区这类表单密集页面，用 Vue 会明显减少手写 DOM 状态同步
 
 目录结构：
 
@@ -39,9 +48,11 @@ UI 沿用了水墨 / 宣纸的视觉系统，所有 token 集中在 [www/css/tok
 │   ├── js/                   # boot / store / deepseek / prompts / utils …
 │   └── assets/               # 图标、品牌资源
 ├── res/                      # Cordova 用的多分辨率应用图标
+├── hooks/                    # Cordova 构建 hook：先跑 Vite，再同步 dist/www
 ├── config.xml                # Cordova 应用清单
 ├── build.json                # iOS 签名配置（团队 ID 等）
-├── package.json              # Cordova 工具链 + 构建脚本
+├── vite.config.js            # Vite 多页构建入口
+├── package.json              # Vite + Cordova 工具链脚本
 └── vercel.json               # Vercel 静态部署配置（指向 landing/）
 ```
 
@@ -49,18 +60,17 @@ UI 沿用了水墨 / 宣纸的视觉系统，所有 token 集中在 [www/css/tok
 
 ## 🚀 本地预览（浏览器）
 
-由于 `js/deepseek.js` 等模块使用了 ES Modules（`import` 语法），浏览器需要通过 HTTP 协议访问，不能用 `file://` 打开。
+由于 `js/deepseek.js` 等模块使用了 ES Modules（`import` 语法），浏览器需要通过 HTTP 协议访问，不能用 `file://` 打开。现在使用 Vite 本地开发服务器：
 
 ```bash
-# 任选其一，从仓库根目录启动
-npx serve www              # 推荐：自动开浏览器，端口随机
-python3 -m http.server 8080 -d www
+npm install
+npm run dev
 ```
 
 然后访问：
 
 ```
-http://localhost:8080/html/index.html
+http://localhost:5173/www/html/index.html
 ```
 
 > 浏览器环境下 `cordova.js` 会 404 是正常的，boot.js 已做兼容处理，不影响功能。
@@ -77,6 +87,10 @@ http://localhost:8080/html/index.html
 # 安装依赖
 npm install
 
+# Web 构建（输出 dist/，供 Vercel / 预览使用）
+npm run build
+npm run preview
+
 # 添加平台（首次）
 npm run prepare:android
 npx cordova platform add ios   # 需要 macOS
@@ -91,6 +105,8 @@ npm run run:android
 npm run build:apk
 ```
 
+Cordova 构建时会通过 [hooks/build-vite.js](hooks/build-vite.js) 先执行 Vite 构建，再通过 [hooks/sync-vite-www.js](hooks/sync-vite-www.js) 把 `dist/www` 同步到平台临时 webroot。源码目录 `www/` 仍然保留为可编辑源文件。
+
 iOS 发布签名走 [build.json](build.json) 中的 Apple Development Team；上传 App Store 时使用 [ExportOptions.plist](ExportOptions.plist)。
 
 ---
@@ -104,7 +120,7 @@ iOS 发布签名走 [build.json](build.json) 中的 Apple Development Team；上
 1. 推到 GitHub 之后，进入 [vercel.com/new](https://vercel.com/new)
 2. Import 这个仓库
 3. **Framework Preset** 保持 `Other` 即可
-4. **Build & Output Settings** 全部留空（`vercel.json` 已经声明路由重写）
+4. **Build Command** 使用 `npm run build:web`，**Output Directory** 使用 `dist`（`vercel.json` 已经声明）
 5. 点 **Deploy**
 
 ### 方式 2：CLI

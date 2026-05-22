@@ -1846,6 +1846,187 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
   border-radius: 50%;
 }
 
+.version-log {
+  display: grid;
+  gap: 12px;
+  padding-left: 16px;
+}
+
+.version-item {
+  position: relative;
+  padding: 12px 14px 12px 18px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--paper) 78%, transparent);
+}
+
+.version-item::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  border-radius: 99px;
+  background: var(--vermilion);
+}
+
+.version-item h3 {
+  margin: 0 0 6px;
+  color: var(--vermilion);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.16em;
+}
+
+.version-item p {
+  margin: 0;
+  padding-left: 0;
+  color: var(--ink-faint);
+  font-size: 13.5px;
+  line-height: 1.85;
+}
+
+@media (max-width: 760px) {
+  .about-screen {
+    width: 100%;
+    padding: calc(env(safe-area-inset-top, 0px) + 52px) 16px calc(env(safe-area-inset-bottom, 0px) + 28px);
+    gap: 18px;
+  }
+
+  .about-left {
+    position: static;
+    top: auto;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .avatar-card {
+    width: min(132px, 42vw);
+    height: min(132px, 42vw);
+    padding: 7px;
+    border-radius: 14px;
+    align-self: center;
+  }
+
+  .avatar-card::before {
+    inset: 6px;
+    border-radius: 10px;
+  }
+
+  .avatar-card img {
+    border-radius: 10px;
+  }
+
+  .about-links {
+    justify-content: center;
+    gap: 9px;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+  }
+
+  .about-tag {
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+  }
+
+  .about-owner-card {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 8px;
+    background-size: 18px 18px;
+  }
+
+  .about-owner-card h2 {
+    font-size: 17px;
+  }
+
+  .about-owner-card p:not(.owner-kicker) {
+    font-size: 12.5px;
+    line-height: 1.75;
+  }
+
+  .owner-links {
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .owner-links a {
+    padding: 5px 8px;
+    border-radius: 6px;
+  }
+
+  .about-card {
+    padding: 20px 16px;
+    border-radius: 8px;
+    background-size: 20px 20px;
+  }
+
+  .about-head {
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .about-head h1 {
+    font-size: 23px;
+    line-height: 1.25;
+    letter-spacing: 0.14em;
+  }
+
+  .ver-chip {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+  }
+
+  .about-rule {
+    margin-bottom: 22px;
+  }
+
+  .about-sec {
+    margin-bottom: 28px;
+  }
+
+  .about-sec h2 {
+    font-size: 16px;
+    line-height: 1.45;
+    letter-spacing: 0.12em;
+  }
+
+  .about-sec p {
+    padding-left: 0;
+    font-size: 13.5px;
+    line-height: 1.9;
+  }
+
+  .about-list {
+    padding-left: 0;
+  }
+
+  .about-list li {
+    font-size: 13.5px;
+    line-height: 1.85;
+    padding-left: 16px;
+  }
+
+  .version-log {
+    padding-left: 0;
+  }
+
+  .version-item {
+    padding: 12px 12px 12px 14px;
+  }
+
+  .version-item p {
+    font-size: 13px;
+    line-height: 1.8;
+  }
+}
+
 /* ============================================================ */
 /* Agent · 聊天界面                                              */
 /* ============================================================ */
@@ -2045,6 +2226,33 @@ body.agent-mode {
 .bubble.ai.streaming-caret::after {
   display: inline;
 }
+
+.bubble.ai.awaiting-content {
+  min-width: 52px;
+  min-height: 42px;
+  white-space: normal;
+}
+
+.message-loading {
+  display: inline-block;
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid color-mix(in oklab, var(--ink-faint) 34%, transparent);
+  border-top-color: var(--vermilion);
+  border-radius: 50%;
+  animation: agent-spin .82s linear infinite;
+  vertical-align: -2px;
+}
+
+.bubble.ai.awaiting-content.streaming-caret::after {
+  content: none;
+}
+
+@keyframes agent-spin {
+  to { transform: rotate(360deg); }
+}
+
 .thinking-fold {
   margin: 0 0 10px;
   padding-bottom: 8px;
@@ -2086,7 +2294,6 @@ body.agent-mode {
 .yc-line.user { align-self: flex-end; }
 .yc-line .bubble {
   flex: 0 1 auto;
-  max-width: calc(100% - 42px);
   min-width: 4.5em;
   width: max-content;
   white-space: pre-wrap;
@@ -2107,6 +2314,18 @@ body.agent-mode {
   font-family: var(--font-mincho);
   font-size: 14px;
   line-height: 1;
+  overflow: hidden;
+  contain: paint;
+}
+
+.role-card-avatar img,
+.yc-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
 }
 .yc-line.user .yc-avatar {
   background: var(--ink);
@@ -4154,11 +4373,313 @@ body:has(.library-wrap) .project-card:hover {
 
 .role-cards-page .role-card-avatar {
   border-radius: 4px;
+  overflow: hidden;
 }
 
 .role-cards-page .role-card-foot {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+.role-cards-page .rc-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 16px 20px 0;
+}
+
+.role-cards-page .rc-quick-btn,
+.role-cards-page .rc-go-btn,
+.role-cards-page .rc-quiet-btn,
+.role-cards-page .rc-add-btn,
+.role-cards-page .rc-remove-btn,
+.role-cards-page .rc-custom-tabs button,
+.role-cards-page .rc-step-nav button {
+  min-height: 34px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--paper) 86%, white);
+  color: var(--ink);
+  font-family: var(--font-mincho);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  box-shadow: none;
+}
+
+.role-cards-page .rc-quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  text-align: left;
+}
+
+.role-cards-page .rc-quick-btn b,
+.role-cards-page .rc-import-preview-card b {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.role-cards-page .rc-quick-btn small,
+.role-cards-page .rc-import-preview-card small,
+.role-cards-page .rc-import-meta {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink-ghost);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.role-cards-page .rc-q-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 4px;
+  color: var(--vermilion);
+}
+
+.role-cards-page .rc-quick-btn:hover,
+.role-cards-page .rc-go-btn:hover,
+.role-cards-page .rc-quiet-btn:hover,
+.role-cards-page .rc-add-btn:hover,
+.role-cards-page .rc-remove-btn:hover,
+.role-cards-page .rc-custom-tabs button:hover,
+.role-cards-page .rc-step-nav button:hover,
+.role-cards-page .rc-custom-tabs button.current,
+.role-cards-page .rc-step-nav button.current {
+  border-color: color-mix(in oklab, var(--vermilion) 68%, var(--paper-edge));
+  background: color-mix(in oklab, var(--vermilion) 6%, var(--paper));
+  color: var(--vermilion);
+}
+
+.role-cards-page .rc-customize-panel,
+.role-cards-page .rc-import-panel,
+.role-cards-page .rc-edit-panel {
+  border: 1px solid var(--paper-edge);
+  border-width: 1px 0;
+  background: color-mix(in oklab, var(--paper) 88%, transparent);
+}
+
+.role-cards-page .rc-custom-tabs,
+.role-cards-page .rc-step-nav {
+  display: flex;
+  gap: 8px;
+  padding: 14px 20px 0;
+  overflow-x: auto;
+}
+
+.role-cards-page .rc-custom-tabs button,
+.role-cards-page .rc-step-nav button {
+  flex: 0 0 auto;
+  padding: 0 12px;
+}
+
+.role-cards-page .rc-custom-body,
+.role-cards-page .rc-import-panel,
+.role-cards-page .rc-edit-body {
+  padding: 16px 20px 18px;
+}
+
+.role-cards-page .rc-custom-label {
+  display: block;
+  margin: 12px 0 7px;
+  font-family: var(--font-mincho);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+
+.role-cards-page .rc-custom-body textarea,
+.role-cards-page .rc-import-panel textarea,
+.role-cards-page .rc-edit-panel textarea,
+.role-cards-page .rc-edit-panel input,
+.role-cards-page .rc-edit-panel select {
+  width: 100%;
+  border: 1px solid var(--paper-edge);
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--paper) 78%, white);
+  color: var(--ink);
+  font-family: var(--font-mincho);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.role-cards-page .rc-char-count {
+  display: block;
+  margin: 6px 0 10px;
+  color: var(--ink-ghost);
+  font-size: 11px;
+  text-align: right;
+}
+
+.role-cards-page .rc-custom-foot,
+.role-cards-page .rc-import-foot,
+.role-cards-page .rc-edit-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--paper-edge);
+  background: color-mix(in oklab, var(--paper) 90%, white);
+}
+
+.role-cards-page .rc-edit-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 6;
+}
+
+.role-cards-page .rc-edit-foot-left,
+.role-cards-page .rc-edit-foot-right,
+.role-cards-page .rc-inline-row,
+.role-cards-page .rc-avatar-row,
+.role-cards-page .rc-opening-head,
+.role-cards-page .rc-wb-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-cards-page .rc-edit-foot-right {
+  margin-left: auto;
+}
+
+.role-cards-page .rc-expert-toggle,
+.role-cards-page .rc-wb-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink-faint);
+  font-family: var(--font-mincho);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+.role-cards-page .rc-drop-zone {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-height: 132px;
+  border: 1px dashed color-mix(in oklab, var(--paper-edge) 90%, var(--ink-faint));
+  border-radius: 4px;
+  color: var(--ink-faint);
+  background: color-mix(in oklab, var(--paper-deep) 55%, white);
+  text-align: center;
+}
+
+.role-cards-page .rc-drop-zone.dragover {
+  border-color: var(--vermilion);
+  color: var(--vermilion);
+  background: color-mix(in oklab, var(--vermilion) 5%, var(--paper));
+}
+
+.role-cards-page .rc-drop-zone p {
+  margin: 0;
+  font-family: var(--font-mincho);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+}
+
+.role-cards-page .rc-drop-zone span,
+.role-cards-page .rc-import-status {
+  font-size: 12px;
+  color: var(--ink-ghost);
+}
+
+.role-cards-page .rc-status-ok { color: var(--vermilion); }
+.role-cards-page .rc-status-error { color: #9d2d22; }
+.role-cards-page .rc-status-pending { color: var(--ink-faint); }
+
+.role-cards-page .rc-import-preview-card,
+.role-cards-page .rc-opening-item,
+.role-cards-page .rc-wb-item,
+.role-cards-page .rc-expert-area {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--paper) 78%, white);
+}
+
+.role-cards-page .rc-opening-list,
+.role-cards-page .rc-worldbook-list {
+  display: grid;
+  gap: 12px;
+}
+
+.role-cards-page .rc-opening-head,
+.role-cards-page .rc-wb-head {
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: var(--ink-faint);
+  font-family: var(--font-mincho);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.role-cards-page .rc-opening-role {
+  max-width: 120px;
+  min-height: 30px;
+}
+
+.role-cards-page .rc-remove-btn {
+  min-height: 28px;
+  padding: 0 8px;
+  color: var(--ink-faint);
+}
+
+.role-cards-page .rc-add-btn {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.role-cards-page .rc-edit-avatar,
+.role-cards-page .rc-edit-avatar-placeholder,
+.role-cards-page .rc-avatar-img {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+  border: 1px solid var(--paper-edge);
+  border-radius: 4px;
+  background: var(--paper-deep);
+  color: var(--vermilion);
+  font-family: var(--font-mincho);
+}
+
+.role-cards-page .role-card-avatar .rc-avatar-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  border: 0;
+}
+
+.role-cards-page .rc-halfer {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.role-cards-page .rc-readonly {
+  color: var(--ink-ghost);
+}
+
+.role-cards-page .rc-expert-area h4 {
+  margin: 0 0 12px;
+  font-family: var(--font-mincho);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--ink);
 }
 
 @media (max-width: 760px) {
@@ -4175,6 +4696,38 @@ body:has(.library-wrap) .project-card:hover {
   .role-cards-page .role-cards-list {
     border-width: 1px 0;
     padding: 14px 0;
+  }
+
+  .role-cards-page .rc-quick-actions {
+    grid-template-columns: 1fr;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .role-cards-page .rc-custom-tabs,
+  .role-cards-page .rc-step-nav,
+  .role-cards-page .rc-custom-body,
+  .role-cards-page .rc-import-panel,
+  .role-cards-page .rc-edit-body,
+  .role-cards-page .rc-custom-foot,
+  .role-cards-page .rc-import-foot,
+  .role-cards-page .rc-edit-foot {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .role-cards-page .rc-edit-foot {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .role-cards-page .rc-edit-foot-left,
+  .role-cards-page .rc-edit-foot-right {
+    width: 100%;
+  }
+
+  .role-cards-page .rc-edit-foot-right button {
+    flex: 1 1 0;
   }
 }
 
@@ -4437,28 +4990,59 @@ body.agent-mode .chat-header {
 }
 
 body.agent-mode .chat-input {
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  width: min(660px, calc(100vw - 36px));
+  gap: 7px;
+  margin-bottom: 0;
+  padding: 10px 12px 9px;
   background: color-mix(in oklab, var(--paper) 94%, white);
-  border-top: 1px solid color-mix(in oklab, var(--paper-edge) 80%, transparent);
-  box-shadow: 0 -12px 28px -24px rgba(28, 26, 22, 0.36);
+  border: 1px solid color-mix(in oklab, var(--paper-edge) 88%, transparent);
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.58),
+    0 14px 38px -30px rgba(28,26,22,0.36),
+    0 1px 0 rgba(28,26,22,0.04);
 }
 
 body.agent-mode .chat-input-row {
   min-height: 0;
+  align-items: stretch;
+  gap: 0;
 }
 
 body.agent-mode .chat-input textarea {
-  min-height: 56px;
-  max-height: 160px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--paper);
-  border-color: var(--paper-edge);
+  min-height: 32px;
+  max-height: 112px;
+  padding: 0 4px;
+  border: 0;
+  outline: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--vermilion);
+  font-family: var(--font-mincho);
+  font-size: 14.5px;
+  line-height: 1.45;
+  letter-spacing: 0;
   box-shadow: none;
+  scrollbar-width: thin;
 }
 
 body.agent-mode .chat-input textarea:focus {
-  border-color: var(--vermilion);
+  border: 0;
+  outline: 0;
   box-shadow: none;
+}
+
+body.agent-mode .chat-input textarea:focus-visible {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+}
+
+body.agent-mode .chat-input textarea::placeholder {
+  color: var(--ink-ghost);
+  opacity: 1;
 }
 
 body.agent-mode .chat-promote,
@@ -4467,24 +5051,155 @@ body.agent-mode .chat-input .chat-tool,
 body.agent-mode .chat-input .quick-prompt-btn,
 body.agent-mode .chat-input .attach-file-btn {
   min-height: initial;
-  background: var(--paper);
-  border-color: var(--paper-edge);
+  background: transparent;
+  border-color: transparent;
   box-shadow: none;
+}
+
+body.agent-mode .chat-tools {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+  min-height: 32px;
 }
 
 body.agent-mode .chat-input .chat-tool {
-  border-radius: 14px;
+  height: 32px;
+  min-height: 32px;
+  gap: 5px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--paper-deep) 72%, white);
+  border: 1px solid var(--paper-edge);
+  color: var(--ink-faint);
+  font-family: var(--font-mincho);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+body.agent-mode .chat-input .chat-tool:hover:not(:disabled),
+body.agent-mode .chat-input .chat-tool:focus-visible {
+  background: color-mix(in oklab, var(--vermilion) 7%, var(--paper));
+  border-color: color-mix(in oklab, var(--vermilion) 70%, var(--paper-edge));
+  color: var(--vermilion);
+  filter: none;
+}
+
+body.agent-mode .chat-input .chat-tool .tool-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  color: currentColor;
+  font-size: 14px;
+  line-height: 1;
+}
+
+body.agent-mode .chat-input .chat-tool .tool-label {
+  max-width: none;
+}
+
+body.agent-mode .chat-input .chat-tool .tool-caret {
+  display: none;
+}
+
+body.agent-mode .chat-input #style-switch-btn {
+  border-color: color-mix(in oklab, var(--vermilion) 40%, var(--paper-edge));
+  color: var(--vermilion);
+  background: color-mix(in oklab, var(--vermilion) 6%, var(--paper));
+}
+
+body.agent-mode .chat-action-group {
+  flex: 0 0 auto;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 32px;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
 }
 
 body.agent-mode .chat-input .quick-prompt-btn,
-body.agent-mode .chat-input .attach-file-btn,
-body.agent-mode .chat-input button {
-  border-radius: 12px;
+body.agent-mode .chat-input .attach-file-btn {
+  display: inline-grid;
+  place-items: center;
+  align-self: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  margin: 0;
+  padding: 0;
+  border-radius: 999px;
+  color: var(--ink-faint);
+  background: color-mix(in oklab, var(--paper-deep) 72%, white);
+  border: 1px solid var(--paper-edge);
+}
+
+body.agent-mode .chat-input .quick-prompt-btn:hover:not(:disabled),
+body.agent-mode .chat-input .quick-prompt-btn:focus-visible,
+body.agent-mode .chat-input .attach-file-btn:hover:not(:disabled),
+body.agent-mode .chat-input .attach-file-btn:focus-visible {
+  color: var(--vermilion);
+  border-color: color-mix(in oklab, var(--vermilion) 65%, var(--paper-edge));
+  background: color-mix(in oklab, var(--vermilion) 7%, var(--paper));
+  filter: none;
 }
 
 body.agent-mode .chat-input button:not(.chat-tool):not(.quick-prompt-btn):not(.attach-file-btn) {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  border: 0;
   min-height: initial;
   box-shadow: none;
+  letter-spacing: 0;
+}
+
+body.agent-mode .chat-input button:not(.chat-tool):not(.quick-prompt-btn):not(.attach-file-btn).is-empty {
+  background: color-mix(in oklab, var(--ink-faint) 34%, var(--paper-edge));
+  color: color-mix(in oklab, var(--ink-faint) 72%, var(--paper));
+  cursor: default;
+}
+
+body.agent-mode .chat-input button:not(.chat-tool):not(.quick-prompt-btn):not(.attach-file-btn) svg {
+  width: 18px;
+  height: 18px;
+  transition: transform .16s ease, opacity .16s ease;
+}
+
+body.agent-mode .chat-input button:not(.chat-tool):not(.quick-prompt-btn):not(.attach-file-btn) .stop-icon {
+  display: none;
+}
+
+body.agent-mode .chat-input button:not(.chat-tool):not(.quick-prompt-btn):not(.attach-file-btn).is-sending {
+  opacity: 1;
+  cursor: pointer;
+}
+
+body.agent-mode .chat-input button:not(.chat-tool):not(.quick-prompt-btn):not(.attach-file-btn).is-sending .send-icon {
+  display: none;
+}
+
+body.agent-mode .chat-input button:not(.chat-tool):not(.quick-prompt-btn):not(.attach-file-btn).is-sending .stop-icon {
+  display: block;
+}
+
+body.agent-mode .chat-input button:not(.chat-tool):not(.quick-prompt-btn):not(.attach-file-btn):hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+body.agent-mode .chat-input button:not(.chat-tool):not(.quick-prompt-btn):not(.attach-file-btn):active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 body.agent-mode .chat-stream {
@@ -4558,6 +5273,12 @@ body.agent-mode .thinking-fold summary::before {
   content: none;
 }
 
+body.agent-mode .yc-line .thinking-body {
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
+}
+
 body.agent-mode .quick-prompt-pop,
 body.agent-mode .tool-pop {
   background: var(--paper);
@@ -4605,8 +5326,9 @@ body.agent-mode .tool-pop {
     display: flex !important;
     position: fixed !important;
     left: 50% !important;
-    bottom: 0 !important;
-    width: 100vw !important;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    width: calc(100vw - 36px) !important;
+    max-width: 660px !important;
     transform: translateX(-50%) !important;
     z-index: 50 !important;
   }
@@ -4619,7 +5341,1086 @@ body.agent-mode .tool-pop {
     overflow-x: auto;
   }
 
-  body.agent-mode .chat-input-row {
+body.agent-mode .chat-input-row {
     display: flex !important;
+  }
+}
+
+/* 5.13 · Role card creator alignment */
+.role-cards-page {
+  --rc-accent: var(--vermilion);
+  --rc-soft: color-mix(in oklab, var(--vermilion) 7%, var(--paper));
+}
+
+.role-cards-page .role-cards-shell {
+  width: min(760px, 100%);
+  padding: calc(env(safe-area-inset-top, 0px) + 74px) 20px calc(32px + env(safe-area-inset-bottom, 0px));
+}
+
+.role-cards-page .rc-app-head,
+.role-cards-page .rc-task-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 0 46px;
+}
+
+.role-cards-page .rc-task-head {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.role-cards-page .rc-app-head h1,
+.role-cards-page .rc-task-head h1 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-mincho);
+  font-size: clamp(34px, 7vw, 52px);
+  line-height: 1.05;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+}
+
+.role-cards-page .rc-app-head p,
+.role-cards-page .rc-task-head p {
+  margin: 12px 0 0;
+  color: var(--ink-ghost);
+  font-family: var(--font-mincho);
+  font-size: clamp(17px, 3.8vw, 23px);
+  line-height: 1.36;
+  letter-spacing: 0.03em;
+}
+
+.role-cards-page .rc-app-head a {
+  margin-top: 8px;
+  color: var(--ink-ghost);
+  font-family: var(--font-mincho);
+  font-size: 15px;
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.role-cards-page .rc-task-icon,
+.role-cards-page .rc-history-btn {
+  display: grid;
+  place-items: center;
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  border: 1px solid color-mix(in oklab, var(--rc-accent) 22%, var(--paper-edge));
+  border-radius: 18px;
+  background: var(--rc-soft);
+  color: var(--rc-accent);
+  font-family: var(--font-mincho);
+  font-size: 24px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.62);
+}
+
+.role-cards-page .rc-history-btn {
+  margin-left: auto;
+  flex-basis: 40px;
+  width: 40px;
+  height: 40px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-ghost);
+  font-size: 20px;
+}
+
+.role-cards-page .rc-create-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.role-cards-page .rc-create-primary,
+.role-cards-page .rc-tool-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 98px;
+  padding: 18px 22px;
+  border: 1px solid color-mix(in oklab, var(--paper-edge) 84%, transparent);
+  border-radius: 22px;
+  background: color-mix(in oklab, var(--paper) 92%, white);
+  color: var(--ink);
+  text-align: left;
+  box-shadow: none;
+  transition: transform .22s cubic-bezier(.16,1,.3,1), border-color .22s cubic-bezier(.16,1,.3,1), background .22s cubic-bezier(.16,1,.3,1);
+}
+
+.role-cards-page .rc-create-primary {
+  min-height: 132px;
+  border-color: color-mix(in oklab, var(--rc-accent) 34%, var(--paper-edge));
+  background: linear-gradient(90deg, color-mix(in oklab, var(--rc-accent) 8%, var(--paper)), color-mix(in oklab, var(--paper) 96%, white));
+}
+
+.role-cards-page .rc-create-primary:hover,
+.role-cards-page .rc-tool-row:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in oklab, var(--rc-accent) 58%, var(--paper-edge));
+}
+
+.role-cards-page .rc-create-primary:active,
+.role-cards-page .rc-tool-row:active {
+  transform: translateY(0);
+}
+
+.role-cards-page .rc-create-icon,
+.role-cards-page .rc-tool-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 66px;
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--rc-accent) 10%, var(--paper));
+  color: var(--rc-accent);
+  font-family: var(--font-mincho);
+  font-size: 27px;
+}
+
+.role-cards-page .rc-create-icon svg,
+.role-cards-page .rc-tool-icon svg,
+.role-cards-page .rc-task-icon svg,
+.role-cards-page .rc-history-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.role-cards-page .rc-tool-icon {
+  flex-basis: 52px;
+  width: 52px;
+  height: 52px;
+  background: color-mix(in oklab, var(--ink) 4%, var(--paper));
+  color: var(--ink-ghost);
+  font-size: 20px;
+}
+
+.role-cards-page .rc-create-primary b,
+.role-cards-page .rc-tool-row b {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--ink);
+  font-family: var(--font-mincho);
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.role-cards-page .rc-create-primary small,
+.role-cards-page .rc-tool-row small {
+  display: block;
+  color: var(--ink-ghost);
+  font-family: var(--font-mincho);
+  font-size: 16px;
+  letter-spacing: 0.02em;
+}
+
+.role-cards-page .rc-tool-label {
+  margin: 24px 0 0;
+  color: var(--ink-ghost);
+  font-family: var(--font-mincho);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+}
+
+.role-cards-page .rc-saved-roles {
+  margin-top: 34px;
+  padding-top: 18px;
+  border-top: 1px solid var(--paper-edge);
+}
+
+.role-cards-page .rc-customize-panel,
+.role-cards-page .rc-import-panel,
+.role-cards-page .rc-edit-panel {
+  border: 1px solid var(--paper-edge);
+  border-radius: 22px;
+  background: color-mix(in oklab, var(--paper) 92%, white);
+  overflow: hidden;
+}
+
+.role-cards-page .rc-custom-tabs,
+.role-cards-page .rc-step-nav {
+  justify-content: space-around;
+  gap: 10px;
+  padding: 22px 24px 0;
+}
+
+.role-cards-page .rc-custom-tabs button,
+.role-cards-page .rc-step-nav button {
+  position: relative;
+  padding: 0 10px 11px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-ghost);
+  font-size: clamp(17px, 4vw, 24px);
+  font-weight: 650;
+  letter-spacing: 0.03em;
+}
+
+.role-cards-page .rc-custom-tabs button.current,
+.role-cards-page .rc-step-nav button.current {
+  background: transparent;
+  color: var(--ink);
+}
+
+.role-cards-page .rc-custom-tabs button.current::after,
+.role-cards-page .rc-step-nav button.current::after {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 0;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--rc-accent);
+}
+
+.role-cards-page .rc-custom-body,
+.role-cards-page .rc-edit-body {
+  padding: 24px;
+}
+
+.role-cards-page .rc-import-panel {
+  padding: 24px;
+}
+
+.role-cards-page .rc-tab-desc {
+  margin: 2px 0 26px;
+  color: var(--ink-ghost);
+  font-family: var(--font-mincho);
+  font-size: clamp(15px, 3.5vw, 21px);
+  line-height: 1.55;
+  letter-spacing: 0.03em;
+}
+
+.role-cards-page .rc-custom-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0 9px;
+  color: var(--ink);
+  font-size: clamp(15px, 3vw, 20px);
+  letter-spacing: 0.03em;
+}
+
+.role-cards-page .rc-custom-label em {
+  color: var(--ink-ghost);
+  font-style: normal;
+  font-size: .78em;
+  white-space: nowrap;
+}
+
+.role-cards-page .rc-custom-body textarea {
+  min-height: 216px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  font-size: clamp(15px, 3.4vw, 20px);
+  line-height: 1.62;
+}
+
+.role-cards-page #custom-desc-core { min-height: 176px; }
+.role-cards-page #custom-desc-extra,
+.role-cards-page #custom-novel-input { min-height: 260px; }
+
+.role-cards-page .rc-char-count {
+  margin: 10px 4px 18px;
+  font-size: 13px;
+}
+
+.role-cards-page .rc-go-btn {
+  min-height: 54px;
+  padding: 0 20px;
+  border-radius: 18px;
+  border-color: color-mix(in oklab, var(--rc-accent) 42%, var(--paper-edge));
+  background: var(--rc-accent);
+  color: var(--paper);
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.role-cards-page .rc-quiet-btn {
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 16px;
+}
+
+.role-cards-page .rc-drop-zone {
+  min-height: 360px;
+  border: 2px dashed color-mix(in oklab, var(--paper-edge) 78%, transparent);
+  border-radius: 22px;
+}
+
+.role-cards-page .rc-drop-zone p {
+  font-size: clamp(17px, 4vw, 23px);
+  letter-spacing: 0.04em;
+}
+
+.role-cards-page .rc-drop-zone span,
+.role-cards-page .rc-import-status {
+  font-size: 15px;
+}
+
+.role-cards-page .rc-info-box {
+  margin-top: 28px;
+  padding: 18px 20px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 18px;
+  background: color-mix(in oklab, var(--paper) 86%, white);
+}
+
+.role-cards-page .rc-info-box b {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--ink);
+  font-family: var(--font-mincho);
+  font-size: 17px;
+}
+
+.role-cards-page .rc-info-box p {
+  margin: 0;
+  color: var(--ink-ghost);
+  font-family: var(--font-mincho);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+@media (max-width: 760px) {
+  .role-cards-page .role-cards-shell {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .role-cards-page .rc-app-head {
+    display: block;
+  }
+
+  .role-cards-page .rc-app-head a {
+    display: block;
+    margin-top: 18px;
+    text-align: right;
+  }
+
+  .role-cards-page .rc-task-head {
+    gap: 14px;
+  }
+
+  .role-cards-page .rc-task-icon {
+    flex-basis: 50px;
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* 5.13 · Role cards, reconciled with Wenshu paper UI */
+.role-cards-page .role-cards-shell {
+  width: min(920px, 100%);
+  padding: calc(76px + env(safe-area-inset-top, 0px)) 22px calc(88px + env(safe-area-inset-bottom, 0px));
+}
+
+.role-cards-page .rc-app-head,
+.role-cards-page .rc-task-head {
+  margin-bottom: 28px;
+  padding-left: 18px;
+  border-left: 2px solid var(--vermilion);
+}
+
+.role-cards-page .rc-task-head {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+}
+
+.role-cards-page .rc-app-head h1,
+.role-cards-page .rc-task-head h1 {
+  font-size: clamp(26px, 5vw, 38px);
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: 0.18em;
+}
+
+.role-cards-page .rc-app-head p,
+.role-cards-page .rc-task-head p {
+  max-width: 36em;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.8;
+  letter-spacing: 0.06em;
+}
+
+.role-cards-page .rc-app-head a {
+  margin-top: 6px;
+  padding: 7px 10px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--paper) 82%, transparent);
+  color: var(--ink-faint);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.role-cards-page .rc-task-icon,
+.role-cards-page .rc-history-btn {
+  width: 34px;
+  height: 34px;
+  flex-basis: 34px;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--paper) 78%, white);
+  border-color: var(--paper-edge);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.38);
+}
+
+.role-cards-page .rc-history-btn {
+  width: 34px;
+  height: 34px;
+  margin-top: 0;
+}
+
+.role-cards-page .rc-task-icon svg,
+.role-cards-page .rc-history-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.role-cards-page .rc-create-stack {
+  gap: 0;
+  margin: 0 0 26px;
+  border-top: 1px solid var(--paper-edge);
+}
+
+.role-cards-page .rc-create-primary,
+.role-cards-page .rc-tool-row {
+  min-height: 104px;
+  padding: 18px 20px;
+  border: 0;
+  border-bottom: 1px solid var(--paper-edge);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.role-cards-page .rc-create-primary {
+  min-height: 126px;
+  background: color-mix(in oklab, var(--vermilion) 3%, transparent);
+}
+
+.role-cards-page .rc-create-primary:hover,
+.role-cards-page .rc-tool-row:hover {
+  transform: translateX(2px);
+  background: color-mix(in oklab, var(--paper-deep) 38%, transparent);
+  border-color: var(--paper-edge);
+}
+
+.role-cards-page .rc-create-icon,
+.role-cards-page .rc-tool-icon {
+  width: 42px;
+  height: 42px;
+  flex-basis: 42px;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--paper) 78%, white);
+  border: 1px solid var(--paper-edge);
+}
+
+.role-cards-page .rc-create-icon svg,
+.role-cards-page .rc-tool-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.role-cards-page .rc-create-primary b,
+.role-cards-page .rc-tool-row b {
+  margin-bottom: 5px;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+}
+
+.role-cards-page .rc-create-primary small,
+.role-cards-page .rc-tool-row small {
+  font-size: 12px;
+  line-height: 1.65;
+  letter-spacing: 0.05em;
+}
+
+.role-cards-page .rc-tool-label {
+  margin: 22px 0 4px;
+  padding-left: 20px;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+}
+
+.role-cards-page .rc-saved-roles {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--paper-edge);
+}
+
+.role-cards-page .rc-customize-panel,
+.role-cards-page .rc-import-panel,
+.role-cards-page .rc-edit-panel {
+  border-width: 1px 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.role-cards-page .rc-custom-tabs,
+.role-cards-page .rc-step-nav {
+  justify-content: flex-start;
+  gap: 24px;
+  padding: 16px 0 0;
+}
+
+.role-cards-page .rc-custom-tabs button,
+.role-cards-page .rc-step-nav button {
+  min-height: 32px;
+  padding: 0 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-ghost);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+}
+
+.role-cards-page .rc-custom-tabs button.current,
+.role-cards-page .rc-step-nav button.current {
+  color: var(--ink);
+  background: transparent;
+}
+
+.role-cards-page .rc-custom-tabs button.current::after,
+.role-cards-page .rc-step-nav button.current::after {
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--vermilion);
+}
+
+.role-cards-page .rc-custom-body,
+.role-cards-page .rc-edit-body,
+.role-cards-page .rc-import-panel {
+  padding: 18px 0;
+}
+
+.role-cards-page .rc-tab-desc {
+  margin: 0 0 20px;
+  color: var(--ink-faint);
+  font-size: 13px;
+  line-height: 1.8;
+  letter-spacing: 0.06em;
+}
+
+.role-cards-page .rc-custom-label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  margin: 14px 0 8px;
+  color: var(--ink);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+}
+
+.role-cards-page .rc-custom-label em {
+  color: var(--ink-ghost);
+  font-size: 11px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+.role-cards-page .rc-custom-body textarea {
+  min-height: 168px;
+  padding: 13px 14px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  line-height: 1.85;
+}
+
+.role-cards-page #custom-desc-core { min-height: 140px; }
+.role-cards-page #custom-desc-extra,
+.role-cards-page #custom-novel-input { min-height: 220px; }
+
+.role-cards-page .rc-go-btn {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+}
+
+.role-cards-page .rc-quiet-btn {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 8px;
+}
+
+.role-cards-page .rc-drop-zone {
+  min-height: 260px;
+  border-width: 1px;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--paper) 74%, transparent);
+}
+
+.role-cards-page .rc-drop-zone p {
+  font-size: 15px;
+  letter-spacing: 0.08em;
+}
+
+.role-cards-page .rc-drop-zone span,
+.role-cards-page .rc-import-status {
+  font-size: 12px;
+}
+
+.role-cards-page .rc-info-box {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--paper) 78%, transparent);
+}
+
+.role-cards-page .rc-info-box b {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--ink);
+  font-family: var(--font-mincho);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+}
+
+.role-cards-page .rc-info-box p {
+  margin: 0;
+  color: var(--ink-ghost);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+@media (max-width: 760px) {
+  .role-cards-page .role-cards-shell {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .role-cards-page .rc-app-head {
+    display: block;
+  }
+
+  .role-cards-page .rc-app-head a {
+    display: inline-block;
+    margin-top: 14px;
+  }
+}
+
+/* 5.14 · Role cards form polish */
+.role-cards-page .rc-customize-panel,
+.role-cards-page .rc-import-panel,
+.role-cards-page .rc-edit-panel {
+  border: 1px solid var(--paper-edge);
+  border-width: 1px 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.role-cards-page .rc-custom-body,
+.role-cards-page .rc-edit-body,
+.role-cards-page .rc-import-panel {
+  padding: 18px 0 20px;
+}
+
+.role-cards-page .role-card-grid,
+.role-cards-page .role-card-examples,
+.role-cards-page .rc-backgrounds,
+.role-cards-page .rc-opening-list,
+.role-cards-page .rc-worldbook-list {
+  display: grid;
+  gap: 14px;
+}
+
+.role-cards-page .role-card-field,
+.role-cards-page .role-card-example {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.role-cards-page .role-card-field + .role-card-field {
+  margin-top: 16px;
+}
+
+.role-cards-page .role-card-field > span,
+.role-cards-page .rc-custom-label,
+.role-cards-page .role-card-example b,
+.role-cards-page .rc-opening-head,
+.role-cards-page .rc-wb-head {
+  color: var(--ink-soft);
+  font-family: var(--font-mincho);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0.14em;
+}
+
+.role-cards-page .rc-custom-label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin: 14px 0 8px;
+}
+
+.role-cards-page .rc-custom-label em {
+  color: var(--ink-ghost);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.45;
+  letter-spacing: 0.06em;
+  white-space: normal;
+  text-align: right;
+}
+
+.role-cards-page .rc-custom-body textarea,
+.role-cards-page .rc-edit-panel textarea,
+.role-cards-page .rc-edit-panel input:not([type="checkbox"]):not([type="file"]),
+.role-cards-page .rc-edit-panel select,
+.role-cards-page .role-card-form textarea,
+.role-cards-page .role-card-form input:not([type="checkbox"]):not([type="file"]),
+.role-cards-page .role-card-import textarea,
+.role-cards-page .role-card-example textarea,
+.role-cards-page .role-card-example input:not([type="checkbox"]):not([type="file"]),
+.role-cards-page .rc-wb-item textarea,
+.role-cards-page .rc-wb-item input:not([type="checkbox"]):not([type="file"]),
+.role-cards-page .rc-opening-item textarea,
+.role-cards-page .rc-opening-item select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--paper-edge);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-mincho);
+  font-size: 13px;
+  line-height: 1.85;
+  letter-spacing: 0.04em;
+  box-shadow: none;
+  transition: border-color .16s ease, background-color .16s ease;
+}
+
+.role-cards-page .rc-custom-body textarea,
+.role-cards-page .rc-edit-panel textarea,
+.role-cards-page .role-card-form textarea,
+.role-cards-page .role-card-import textarea,
+.role-cards-page .role-card-example textarea,
+.role-cards-page .rc-wb-item textarea,
+.role-cards-page .rc-opening-item textarea {
+  min-height: 160px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.role-cards-page .rc-edit-panel input:not([type="checkbox"]):not([type="file"]),
+.role-cards-page .rc-edit-panel select,
+.role-cards-page .role-card-form input:not([type="checkbox"]):not([type="file"]),
+.role-cards-page .role-card-example input:not([type="checkbox"]):not([type="file"]),
+.role-cards-page .rc-wb-item input:not([type="checkbox"]):not([type="file"]),
+.role-cards-page .rc-opening-item select {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.role-cards-page .rc-custom-body textarea:focus,
+.role-cards-page .rc-edit-panel textarea:focus,
+.role-cards-page .rc-edit-panel input:not([type="checkbox"]):not([type="file"]):focus,
+.role-cards-page .rc-edit-panel select:focus,
+.role-cards-page .role-card-form textarea:focus,
+.role-cards-page .role-card-form input:not([type="checkbox"]):not([type="file"]):focus,
+.role-cards-page .role-card-import textarea:focus,
+.role-cards-page .role-card-example textarea:focus,
+.role-cards-page .role-card-example input:not([type="checkbox"]):not([type="file"]):focus,
+.role-cards-page .rc-wb-item textarea:focus,
+.role-cards-page .rc-wb-item input:not([type="checkbox"]):not([type="file"]):focus,
+.role-cards-page .rc-opening-item textarea:focus,
+.role-cards-page .rc-opening-item select:focus {
+  outline: none;
+  border-color: color-mix(in oklab, var(--vermilion) 42%, var(--paper-edge));
+  background: color-mix(in oklab, var(--paper) 94%, white);
+}
+
+.role-cards-page .rc-custom-body textarea::placeholder,
+.role-cards-page .rc-edit-panel textarea::placeholder,
+.role-cards-page .rc-edit-panel input::placeholder,
+.role-cards-page .role-card-form textarea::placeholder,
+.role-cards-page .role-card-form input::placeholder,
+.role-cards-page .role-card-import textarea::placeholder,
+.role-cards-page .role-card-example textarea::placeholder,
+.role-cards-page .role-card-example input::placeholder,
+.role-cards-page .rc-wb-item textarea::placeholder,
+.role-cards-page .rc-wb-item input::placeholder,
+.role-cards-page .rc-opening-item textarea::placeholder {
+  color: var(--ink-ghost);
+}
+
+.role-cards-page #custom-desc-core {
+  min-height: 150px;
+}
+
+.role-cards-page #custom-desc-extra,
+.role-cards-page #custom-novel-input {
+  min-height: 210px;
+}
+
+.role-cards-page .rc-char-count,
+.role-cards-page .hint,
+.role-cards-page .rc-import-status {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink-ghost);
+  font-family: var(--font-mincho);
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 0.05em;
+}
+
+.role-cards-page .rc-char-count {
+  margin: 7px 2px 14px;
+  text-align: right;
+}
+
+.role-cards-page .role-card-example,
+.role-cards-page .rc-opening-item,
+.role-cards-page .rc-wb-item,
+.role-cards-page .rc-expert-area,
+.role-cards-page .rc-import-preview-card {
+  padding: 14px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--paper) 84%, transparent);
+  box-shadow: none;
+}
+
+.role-cards-page .rc-import-preview-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.role-cards-page .rc-import-preview-card p {
+  margin: 8px 0;
+  color: var(--ink-faint);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.role-cards-page .rc-opening-preview {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-left: 2px solid color-mix(in oklab, var(--vermilion) 56%, var(--paper-edge));
+  background: color-mix(in oklab, var(--paper-deep) 48%, transparent);
+}
+
+.role-cards-page .rc-opening-preview b {
+  display: block;
+  color: var(--ink-soft);
+  font-family: var(--font-mincho);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+}
+
+.role-cards-page .rc-opening-preview p {
+  margin: 6px 0 0;
+  color: var(--ink-faint);
+  font-family: var(--font-mincho);
+  font-size: 12px;
+  line-height: 1.75;
+  letter-spacing: 0.04em;
+}
+
+.role-cards-page #ai-card-list .rc-role-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.role-cards-page #ai-card-list .rc-role-view {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 9px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--paper) 72%, transparent);
+  font-family: var(--font-mincho);
+  box-shadow: none;
+}
+
+.role-cards-page #ai-card-list .rc-role-view span:not(.role-card-avatar) {
+  min-width: 0;
+}
+
+.role-cards-page #ai-card-list .rc-role-edit-btn {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  width: 34px;
+  min-width: 34px;
+  padding: 0;
+  color: var(--ink-ghost);
+}
+
+.role-cards-page #ai-card-list .rc-role-edit-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.role-cards-page #ai-card-list .rc-role-row.current .rc-role-view,
+.role-cards-page #ai-card-list .rc-role-edit-btn:hover {
+  background: color-mix(in oklab, var(--vermilion) 5%, transparent);
+}
+
+.role-cards-page #ai-card-list .rc-role-row.current .rc-role-view,
+.role-cards-page #ai-card-list .rc-role-edit-btn:hover {
+  border-color: color-mix(in oklab, var(--vermilion) 72%, var(--paper-edge));
+}
+
+.role-cards-page #ai-card-list .rc-role-edit-btn:hover {
+  color: var(--vermilion);
+}
+
+.role-cards-page .rc-import-avatar,
+.role-cards-page .rc-edit-avatar,
+.role-cards-page .rc-edit-avatar-placeholder {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  object-fit: cover;
+  border: 1px solid var(--paper-edge);
+  border-radius: 8px;
+  background: var(--paper-deep);
+  color: var(--vermilion);
+  font-family: var(--font-mincho);
+  overflow: hidden;
+  contain: paint;
+}
+
+.role-cards-page img.rc-import-avatar,
+.role-cards-page img.rc-edit-avatar {
+  display: block;
+  max-width: 44px;
+  max-height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  object-fit: cover;
+}
+
+.role-cards-page .rc-opening-head,
+.role-cards-page .rc-wb-head,
+.role-cards-page .rc-inline-row,
+.role-cards-page .rc-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-cards-page .rc-avatar-row input[name="edit_avatarDataUrl"] {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.role-cards-page .rc-avatar-upload {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.role-cards-page .rc-opening-head,
+.role-cards-page .rc-wb-head {
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.role-cards-page .rc-wb-check,
+.role-cards-page .rc-expert-toggle {
+  color: var(--ink-faint);
+  font-family: var(--font-mincho);
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+}
+
+.role-cards-page .rc-wb-check input,
+.role-cards-page .rc-expert-toggle input {
+  accent-color: var(--vermilion);
+}
+
+.role-cards-page .rc-drop-zone {
+  min-height: 220px;
+  border: 1px dashed color-mix(in oklab, var(--paper-edge) 86%, var(--ink-ghost));
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--paper) 78%, transparent);
+}
+
+.role-cards-page .rc-drop-zone p {
+  font-size: 14px;
+}
+
+.role-cards-page .rc-go-btn,
+.role-cards-page .rc-quiet-btn,
+.role-cards-page .rc-add-btn,
+.role-cards-page .rc-remove-btn {
+  min-height: 40px;
+  border-radius: 8px;
+  font-family: var(--font-mincho);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.role-cards-page .rc-go-btn {
+  min-height: 42px;
+}
+
+@media (max-width: 760px) {
+  .role-cards-page .rc-custom-label {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .role-cards-page .rc-custom-label em {
+    text-align: left;
+  }
+
+  .role-cards-page .rc-inline-row,
+  .role-cards-page .rc-avatar-row {
+    flex-wrap: wrap;
+  }
+
+  .role-cards-page .rc-inline-row > *,
+  .role-cards-page .rc-avatar-row > input {
+    flex-basis: 100%;
   }
 }

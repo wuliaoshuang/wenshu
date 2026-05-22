@@ -6,8 +6,7 @@
 <title>关于 · 文舒</title>
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/app.css">
-<script src="../cordova.js"></script>
-<script src="../js/boot.js"></script>
+<script type="module" src="../js/boot.js"></script>
 </head>
 <body>
   <a class="ghost tl" href="index.html" data-back-fallback="index.html" aria-label="返回">
@@ -48,7 +47,7 @@
       <article class="about-card">
         <header class="about-head">
           <h1>关 于 文 舒</h1>
-          <time class="ver-chip">v 5.12</time>
+          <time class="ver-chip">v 5.13</time>
         </header>
         <div class="about-rule"></div>
 
@@ -76,6 +75,24 @@
             <li>附件解析 · MD / TXT / DOC / DOCX 参考材料</li>
             <li>本地存档 · 多格式导出（MD / TXT / JSON）</li>
           </ul>
+        </section>
+
+        <section class="about-sec">
+          <h2><span class="bar"></span>版 本 记 录</h2>
+          <div class="version-log">
+            <article class="version-item">
+              <h3>v 5.13</h3>
+              <p>迁移到 Vite 构建，修复多页面访问 404；重做角色卡工坊，补齐 PNG / JSON 导入、开场对白、世界书、头像本地持久化和英文角色卡翻译；Agent 输入区加入发送、加载、停止输出等更明确的状态。</p>
+            </article>
+            <article class="version-item">
+              <h3>v 5.12</h3>
+              <p>加入墨小 Agent 构建模式，支持标题、大纲、人物和章节细纲的连续推进；角色扮演模式独立成纯语C通道，支持 DeepSeek Pro 思考折叠、附件解析和更稳定的流式输出。</p>
+            </article>
+            <article class="version-item">
+              <h3>v 5.11</h3>
+              <p>打磨小说工坊主流程：三层递进立项、闪念速记、章节草稿、本地书房和多格式导出成型；统一纸面视觉语言，让移动端写作、归档和重写的路径更清楚。</p>
+            </article>
+          </div>
         </section>
 
         <section class="about-sec">

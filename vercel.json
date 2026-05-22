@@ -1,9 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build:web",
+  "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
     { "source": "/", "destination": "/landing/index.html" },
+    { "source": "/agent.html", "destination": "/www/html/agent.html" },
+    { "source": "/library.html", "destination": "/www/html/library.html" },
+    { "source": "/settings.html", "destination": "/www/html/settings.html" },
+    { "source": "/role-cards.html", "destination": "/www/html/role-cards.html" },
+    { "source": "/capture.html", "destination": "/www/html/capture.html" },
+    { "source": "/onboard.html", "destination": "/www/html/onboard.html" },
+    { "source": "/plan.html", "destination": "/www/html/plan.html" },
+    { "source": "/editor.html", "destination": "/www/html/editor.html" },
+    { "source": "/reader.html", "destination": "/www/html/reader.html" },
+    { "source": "/export.html", "destination": "/www/html/export.html" },
+    { "source": "/about.html", "destination": "/www/html/about.html" },
     { "source": "/www/html", "destination": "/www/html/index.html" },
     { "source": "/www/html/", "destination": "/www/html/index.html" }
   ],
@@ -15,7 +28,7 @@
       ]
     },
     {
-      "source": "/landing/assets/(.*)",
+      "source": "/www/assets/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=604800, immutable" }
       ]

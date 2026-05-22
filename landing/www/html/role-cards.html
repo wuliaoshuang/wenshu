@@ -3,12 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<base href="/www/html/">
 <title>我的角色卡 · 文舒</title>
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/app.css">
-<script src="../cordova.js"></script>
-<script src="../js/boot.js"></script>
+<script type="module" src="../js/boot.js"></script>
 </head>
 <body class="role-cards-page">
   <a class="ghost tl" href="index.html" data-back-fallback="index.html" aria-label="返回">
@@ -23,56 +21,234 @@
     </svg>
   </a>
 
-  <main class="role-cards-shell">
-    <header class="role-cards-head">
-      <h1>我 的 角 色 卡</h1>
-      <p>AI 角色可以建很多张；我的角色只有一张，全局共用。</p>
+  <!-- 创建中心 -->
+  <main class="role-cards-shell" id="page-list">
+    <header class="rc-app-head">
+      <div>
+        <h1>角 色 卡 工 坊</h1>
+        <p>为纯语C准备 AI 角色、用户角色与导入卡。</p>
+      </div>
+      <a href="agent.html">回 到 Agent</a>
     </header>
 
-    <section class="role-cards-layout">
-      <aside class="role-cards-list">
-        <div class="rc-list-head">
-          <span>AI 角 色</span>
-          <button id="new-ai-card" type="button">+ 新 建</button>
-        </div>
-        <ul id="ai-card-list"></ul>
-        <button id="edit-user-card" class="user-card-entry" type="button">
-          <span class="role-card-avatar" id="user-card-avatar">我</span>
-          <span>
-            <b>我 的 角 色</b>
-            <small>全局用户角色</small>
-          </span>
-        </button>
-      </aside>
+    <section class="rc-create-stack" aria-label="创建角色">
+      <button class="rc-create-primary" id="goto-create" type="button">
+        <span class="rc-create-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3l1.5 5.2L19 10l-5.5 1.8L12 17l-1.5-5.2L5 10l5.5-1.8L12 3z"/><path d="M18 15l.7 2.3L21 18l-2.3.7L18 21l-.7-2.3L15 18l2.3-.7L18 15z"/></svg>
+        </span>
+        <span><b>创建角色</b><small>设计你的 AI 角色</small></span>
+      </button>
 
-      <section class="role-cards-editor">
-        <div class="rc-editor-head">
-          <div>
-            <h2 id="editor-title">新 AI 角色</h2>
-            <p id="editor-subtitle">这张卡可在纯语C会话里随时切换</p>
-          </div>
-          <button id="delete-card" type="button">删 除</button>
-        </div>
-        <div class="role-card-import">
-          <textarea id="ai-seed" rows="3" placeholder="写一点角色方向，让 AI 帮你补全。"></textarea>
-          <div class="role-card-import-actions">
-            <button id="ai-generate" type="button">AI 生 成</button>
-          </div>
-          <textarea id="json-box" rows="4" placeholder='粘贴 JSON，例如 {"角色名称":"墨小","说话风格":"短句，克制"}'></textarea>
-          <div class="role-card-import-actions">
-            <button id="json-file-btn" type="button">选 择 JSON 文 件</button>
-            <input id="json-file" type="file" accept=".json,application/json" hidden>
-            <button id="json-import" type="button">导 入 JSON</button>
-            <button id="json-clear" type="button">清 空</button>
-          </div>
-        </div>
-        <form id="card-form" class="role-card-form"></form>
-        <footer class="role-card-foot">
-          <button id="clear-form" type="button">清 空 表 单</button>
-          <button id="save-card" type="button">保 存</button>
-        </footer>
-      </section>
+      <div class="rc-tool-label">生 成 与 导 入</div>
+      <button class="rc-tool-row" id="goto-customize" type="button">
+        <span class="rc-tool-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M14 4l6 6-9 9H5v-6l9-9z"/><path d="M13 5l6 6"/><path d="M5 19l4-1"/></svg>
+        </span>
+        <span><b>定制角色卡</b><small>从素材自动生成</small></span>
+      </button>
+      <button class="rc-tool-row" id="goto-import" type="button">
+        <span class="rc-tool-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>
+        </span>
+        <span><b>导入角色卡</b><small>导入 PNG / JSON 角色卡</small></span>
+      </button>
     </section>
+
+    <section class="rc-saved-roles">
+      <div class="rc-list-head">
+        <span>已 创 建 角 色</span>
+        <button id="new-ai-card" type="button">+ 新 建</button>
+      </div>
+      <ul id="ai-card-list"></ul>
+      <button id="edit-user-card" class="user-card-entry" type="button">
+        <span class="role-card-avatar" id="user-card-avatar">我</span>
+        <span>
+          <b>我 的 角 色</b>
+          <small>全局用户角色</small>
+        </span>
+      </button>
+    </section>
+
+    <section class="role-cards-editor rc-legacy-quick" hidden>
+      <div class="rc-editor-head">
+        <div>
+          <h2 id="editor-title">新 AI 角色</h2>
+          <p id="editor-subtitle">从描述、聊天记录、小说片段中提炼，或导入 PNG/JSON</p>
+        </div>
+        <button id="delete-card" type="button">删 除</button>
+      </div>
+      <form id="card-form" class="role-card-form"></form>
+      <footer class="role-card-foot">
+        <button id="clear-form" type="button">清 空 表 单</button>
+        <button id="save-card" type="button">保 存</button>
+      </footer>
+    </section>
+  </main>
+
+  <!-- 定制页 -->
+  <main class="role-cards-shell" id="page-customize" hidden>
+    <header class="rc-task-head">
+      <span class="rc-task-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h5"/><path d="M10 12h7"/><path d="M10 16h7"/></svg></span>
+      <div>
+        <h1>定 制 角 色 卡</h1>
+        <p>用已有素材生成一张可继续编辑的草稿。</p>
+      </div>
+      <button type="button" class="rc-history-btn" aria-label="历史记录"><svg viewBox="0 0 24 24"><path d="M12 7v5l3 2"/><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/></svg></button>
+    </header>
+    <div class="rc-customize-panel">
+      <nav class="rc-custom-tabs">
+        <button type="button" data-tab="chat" class="current">聊天记录</button>
+        <button type="button" data-tab="desc">文字描述</button>
+        <button type="button" data-tab="novel">小说沉浸</button>
+      </nav>
+      <div class="rc-custom-body" id="customize-tab-chat">
+        <p class="rc-tab-desc">从聊天记录里提取语气、关系和行为习惯，生成角色草稿。</p>
+        <label class="rc-custom-label"><span>粘贴聊天记录</span><em>支持微信、QQ等聊天格式，最多4096字符</em></label>
+        <textarea id="custom-chat-input" rows="8" placeholder="粘贴你和这个角色的聊天记录…" maxlength="4096"></textarea>
+        <span class="rc-char-count" id="custom-chat-count">0 / 4096</span>
+        <button id="custom-chat-go" type="button" class="rc-go-btn">开 始 AI 智 能 分 析</button>
+      </div>
+      <div class="rc-custom-body" id="customize-tab-desc" hidden>
+        <p class="rc-tab-desc">用自然语言描述角色方向，文舒会补齐可用的角色设定。</p>
+        <label class="rc-custom-label"><span>生成指令 *</span><em>0 / 1,000</em></label>
+        <textarea id="custom-desc-core" rows="4" placeholder="写清楚这个角色是谁、什么性格、外貌…" maxlength="1000"></textarea>
+        <span class="rc-char-count" id="custom-desc-core-count">0 / 1000</span>
+        <label class="rc-custom-label"><span>大纲（可选）</span><em>0 / 2,000</em></label>
+        <textarea id="custom-desc-extra" rows="5" placeholder="补充背景、事件、关系…" maxlength="2000"></textarea>
+        <span class="rc-char-count" id="custom-desc-extra-count">0 / 2000</span>
+        <button id="custom-desc-go" type="button" class="rc-go-btn">开 始 创 建 AI 角 色</button>
+      </div>
+      <div class="rc-custom-body" id="customize-tab-novel" hidden>
+        <p class="rc-tab-desc">从小说片段里提炼人物关系、世界背景和开场语境。</p>
+        <label class="rc-custom-label"><span>小说/故事片段</span><em>最多 50000 字</em></label>
+        <textarea id="custom-novel-input" rows="12" placeholder="粘贴小说片段…角色所在的文本段落" maxlength="50000"></textarea>
+        <span class="rc-char-count" id="custom-novel-count">0 / 50000</span>
+        <button id="custom-novel-go" type="button" class="rc-go-btn">开 始 生 成</button>
+      </div>
+      <div class="rc-custom-foot">
+        <button id="customize-cancel" type="button" class="rc-quiet-btn">返 回 列 表</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- 导入页 -->
+  <main class="role-cards-shell" id="page-import" hidden>
+    <header class="rc-task-head">
+      <span class="rc-task-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 19h14"/></svg></span>
+      <div>
+        <h1>导 入 角 色 卡</h1>
+        <p>读取 PNG / JSON 里的角色信息，再进入文舒编辑器。</p>
+      </div>
+    </header>
+    <div class="rc-import-panel">
+      <div class="rc-drop-zone" id="import-drop-zone">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <p>拖拽文件到此处，或点击选择</p>
+        <span>支持 PNG 角色卡，也可导入 JSON</span>
+        <input type="file" id="import-file-input" accept=".png,.json,application/json,image/png" hidden>
+      </div>
+      <div class="rc-import-status" id="import-status"></div>
+      <div class="rc-import-preview" id="import-preview" hidden></div>
+      <aside class="rc-info-box">
+        <b>什么是角色卡？</b>
+        <p>角色卡是包含角色信息的 PNG 格式文件。文舒会读取其中的角色设定，并保留可编辑草稿。</p>
+      </aside>
+      <div class="rc-import-foot">
+        <button id="import-cancel" type="button" class="rc-quiet-btn">返 回 列 表</button>
+        <button id="import-translate" type="button" class="rc-quiet-btn" hidden>翻 译 成 中 文</button>
+        <button id="import-confirm" type="button" class="rc-go-btn" hidden>确认导入并编辑</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- 编辑页（四步向导）-->
+  <main class="role-cards-shell" id="page-edit" hidden>
+    <header class="role-cards-head">
+      <h1 id="edit-page-title">编 辑 角 色</h1>
+      <p>逐步完善角色卡，底部可切换进阶模式</p>
+    </header>
+    <div class="rc-edit-panel">
+      <nav class="rc-step-nav" id="rc-step-nav">
+        <button type="button" data-step="1" class="current">核心身份</button>
+        <button type="button" data-step="2">详细描述</button>
+        <button type="button" data-step="3">开场对白</button>
+        <button type="button" data-step="4">世界书</button>
+      </nav>
+
+      <div class="rc-edit-body">
+        <!-- 第1步：核心身份 -->
+        <div class="rc-step-body" id="edit-step-1">
+          <div class="role-card-grid" id="edit-core-grid"></div>
+        </div>
+        <!-- 第2步：详细描述 -->
+        <div class="rc-step-body" id="edit-step-2" hidden>
+          <label class="role-card-field"><span>角色简介（仅展示给用户）</span>
+            <textarea name="edit-intro" rows="3" placeholder="给用户看的卡片简介，不进入提示词"></textarea>
+          </label>
+          <label class="role-card-field"><span>详细描述</span>
+            <textarea name="edit-detail" rows="5" placeholder="更丰满的外貌、背景、心理综合描述"></textarea>
+          </label>
+          <label class="role-card-field"><span>场景设定</span>
+            <textarea name="edit-scene" rows="3" placeholder="角色所在的世界、时代、环境氛围"></textarea>
+          </label>
+          <label class="role-card-field"><span>系统指令</span>
+            <textarea name="edit-systemInstruction" rows="3" placeholder="额外的 system 级指令，直接拼入角色卡开头"></textarea>
+          </label>
+          <label class="role-card-field"><span>后置指令</span>
+            <textarea name="edit-postHistoryInstructions" rows="3" placeholder="拼在对话历史末尾的指令"></textarea>
+          </label>
+          <label class="role-card-field"><span>标签</span>
+            <input name="edit-tags" type="text" placeholder="逗号分隔，如：古風,仙俠,悲劇"></label>
+          <label class="role-card-field"><span>作者 / 版本</span>
+            <div class="rc-inline-row">
+              <input name="edit-creator" type="text" placeholder="作者" class="rc-halfer">
+              <input name="edit-characterVersion" type="text" placeholder="版本" class="rc-halfer">
+            </div>
+          </label>
+          <!-- 专家模式区域 -->
+          <div class="rc-expert-area" id="edit-expert-area" hidden>
+            <h4>旧有字段（兼容旧版文舒角色卡）</h4>
+            <div class="role-card-grid" id="edit-legacy-grid"></div>
+            <div class="role-card-examples" id="edit-legacy-examples"></div>
+            <label class="role-card-field"><span>补充背景碎片</span></label>
+            <div class="rc-backgrounds" id="edit-legacy-bgs"></div>
+            <label class="role-card-field"><span>自定义补充规则</span>
+              <textarea name="edit-customRules" rows="3" placeholder="额外规则，会拼到角色卡末尾"></textarea>
+            </label>
+            <label class="role-card-field"><span>外部元数据摘要</span>
+              <textarea name="edit-externalRaw" rows="3" placeholder="从外部文件导入的未知元数据，只读" readonly class="rc-readonly"></textarea>
+            </label>
+          </div>
+        </div>
+        <!-- 第3步：开场对白 -->
+        <div class="rc-step-body" id="edit-step-3" hidden>
+          <div id="edit-opening-list" class="rc-opening-list"></div>
+        </div>
+        <!-- 第4步：世界书 -->
+        <div class="rc-step-body" id="edit-step-4" hidden>
+          <div id="edit-worldbook-list" class="rc-worldbook-list"></div>
+        </div>
+      </div>
+
+      <footer class="rc-edit-foot">
+        <div class="rc-edit-foot-left">
+          <button id="edit-prev" type="button" class="rc-quiet-btn" disabled>上 一 步</button>
+          <label class="rc-expert-toggle">
+            <input type="checkbox" id="edit-expert-mode"> 专 业 模 式
+          </label>
+        </div>
+        <div class="rc-edit-foot-right">
+          <button id="edit-cancel" type="button" class="rc-quiet-btn">取 消</button>
+          <button id="edit-translate" type="button" class="rc-quiet-btn">翻 译 成 中 文</button>
+          <button id="edit-next" type="button" class="rc-go-btn">下 一 步</button>
+          <button id="edit-save" type="button" class="rc-go-btn rc-save-btn" hidden>保 存</button>
+        </div>
+      </footer>
+    </div>
   </main>
 
   <script type="module">
@@ -83,57 +259,142 @@
     import { chat, parseJson } from '../js/deepseek.js';
     import { bindGlobalTapVibration, bindBackButtons, confirmDialog, requireApiKey, toast, vibrate, $ } from '../js/utils.js';
     import {
-      ROLE_CARD_FIELDS, createEmptyRoleCard, normalizeRoleCard, mergeRoleCard,
-      parseRoleCardJson, roleCardDisplayName, roleCardInitial, roleCardAiPrompt,
+      ROLE_CARD_FIELDS, EXTENDED_FIELDS, createEmptyRoleCard, normalizeRoleCard, mergeRoleCard,
+      parseRoleCardJson, parsePngRoleCard, roleCardDisplayName, roleCardInitial,
+      roleCardAiPrompt, roleCardChatPrompt, roleCardDescPrompt, roleCardNovelPrompt,
     } from '../js/role-card.js';
 
     bindGlobalTapVibration();
     bindBackButtons();
     window.addEventListener('pagehide', flushAgent);
     window.addEventListener('beforeunload', flushAgent);
+
     let mode = 'ai';
     let currentId = null;
     let working = createEmptyRoleCard();
+    let importedCard = null;
+    let currentStep = 1;
+    let currentPage = 'list'; // list | customize | import | edit
 
-    const $list = $('#ai-card-list');
-    const $form = $('#card-form');
-    const $title = $('#editor-title');
-    const $subtitle = $('#editor-subtitle');
-    const $delete = $('#delete-card');
-    const $new = $('#new-ai-card');
-    const $userEntry = $('#edit-user-card');
-    const $userAvatar = $('#user-card-avatar');
-    const $save = $('#save-card');
-    const $clear = $('#clear-form');
-    const $seed = $('#ai-seed');
-    const $ai = $('#ai-generate');
-    const $json = $('#json-box');
-    const $jsonImport = $('#json-import');
-    const $jsonClear = $('#json-clear');
-    const $jsonFileBtn = $('#json-file-btn');
-    const $jsonFile = $('#json-file');
+    const $pageList = $('#page-list');
+    const $pageCustomize = $('#page-customize');
+    const $pageImport = $('#page-import');
+    const $pageEdit = $('#page-edit');
+
+    const AVATAR_IMAGE_SIZE = 512;
+    const AVATAR_IMAGE_QUALITY = 0.86;
 
     function escapeHtml(s) { return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
     function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(reader.error || new Error('图片读取失败'));
+        reader.readAsDataURL(file);
+      });
+    }
+    function imageToCanvasDataUrl(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const side = AVATAR_IMAGE_SIZE;
+          const canvas = document.createElement('canvas');
+          canvas.width = side;
+          canvas.height = side;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('无法处理图片'));
+            return;
+          }
+          const scale = Math.max(side / img.naturalWidth, side / img.naturalHeight);
+          const width = Math.round(img.naturalWidth * scale);
+          const height = Math.round(img.naturalHeight * scale);
+          const x = Math.round((side - width) / 2);
+          const y = Math.round((side - height) / 2);
+          ctx.fillStyle = '#f8f4ea';
+          ctx.fillRect(0, 0, side, side);
+          ctx.drawImage(img, x, y, width, height);
+          resolve(canvas.toDataURL('image/jpeg', AVATAR_IMAGE_QUALITY));
+        };
+        img.onerror = () => reject(new Error('图片解码失败'));
+        img.src = src;
+      });
+    }
+    async function fileToAvatarDataUrl(file) {
+      const raw = await fileToDataUrl(file);
+      return imageToCanvasDataUrl(raw);
+    }
+
+    function showPage(name) {
+      currentPage = name;
+      $pageList.hidden = name !== 'list';
+      $pageCustomize.hidden = name !== 'customize';
+      $pageImport.hidden = name !== 'import';
+      $pageEdit.hidden = name !== 'edit';
+    }
+
+    function firstOpeningText(card) {
+      const c = normalizeRoleCard(card);
+      const found = (c.openingDialogues || []).find((d) => d.content && d.content.trim());
+      return found ? found.content.trim() : '';
+    }
+
+    function openingPreviewHtml(card) {
+      const text = firstOpeningText(card);
+      if (!text) return '';
+      return `<div class="rc-opening-preview"><b>开 场 白</b><p>${escapeHtml(text.slice(0, 240))}${text.length > 240 ? '…' : ''}</p></div>`;
+    }
+
+    function openEditPage(card, { nextMode = 'ai', id = null, step = 1 } = {}) {
+      mode = nextMode;
+      currentId = id;
+      working = normalizeRoleCard(card || createEmptyRoleCard());
+      showPage('edit');
+      currentStep = step;
+      renderEditPage();
+    }
+
+    // === 列表页 ===
+    const $list = $('#ai-card-list');
+    const $title = $('#editor-title');
+    const $subtitle = $('#editor-subtitle');
+    const $delete = $('#delete-card');
 
     function renderList() {
       const cards = listAiRoleCards();
-      $list.innerHTML = cards.map((card) => `
-        <li>
-          <button type="button" class="${card.id === currentId && mode === 'ai' ? 'current' : ''}" data-id="${card.id}">
-            <span class="role-card-avatar">${escapeHtml(roleCardInitial(card))}</span>
-            <span><b>${escapeHtml(roleCardDisplayName(card) || '未命名角色')}</b><small>${escapeHtml(card.identity || 'AI 角色')}</small></span>
-          </button>
-        </li>`).join('');
+      $list.innerHTML = cards.map((card) => {
+        const avatarHtml = card.avatarDataUrl
+          ? `<span class="role-card-avatar"><img src="${escapeAttr(card.avatarDataUrl)}" alt="" class="rc-avatar-img"></span>`
+          : `<span class="role-card-avatar">${escapeHtml(roleCardInitial(card))}</span>`;
+        return `<li>
+          <div class="rc-role-row ${card.id === currentId && mode === 'ai' ? 'current' : ''}">
+            <div class="rc-role-view" aria-label="${escapeAttr(roleCardDisplayName(card) || '未命名角色')}">
+              ${avatarHtml}
+              <span><b>${escapeHtml(roleCardDisplayName(card) || '未命名角色')}</b><small>${escapeHtml(card.identity || card.tags || 'AI 角色')}</small></span>
+            </div>
+            <button type="button" class="rc-role-edit-btn" data-edit-id="${card.id}" aria-label="编辑 ${escapeAttr(roleCardDisplayName(card) || '未命名角色')}">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-9.5 9.5H5v-5.5L14 4z"/><path d="M13 5l6 6"/><path d="M5 19l4.5-1"/></svg>
+            </button>
+          </div>
+        </li>`;
+      }).join('');
       if (!cards.length) $list.innerHTML = '<li class="rc-empty">还没有 AI 角色卡</li>';
-      $userAvatar.textContent = roleCardInitial(getUserRoleCard(), '我');
+      const userCard = getUserRoleCard();
+      const ua = $('#user-card-avatar');
+      if (userCard.avatarDataUrl) {
+        ua.innerHTML = `<img src="${escapeAttr(userCard.avatarDataUrl)}" alt="" class="rc-avatar-img">`;
+      } else {
+        ua.textContent = roleCardInitial(userCard, '我');
+      }
     }
 
-    function renderForm() {
+    function renderFormQuick() {
       working = normalizeRoleCard(working);
       $title.textContent = mode === 'user' ? '我 的 角 色' : (roleCardDisplayName(working) || '新 AI 角色');
       $subtitle.textContent = mode === 'user' ? '用户角色是全局设定，所有纯语C会话共用' : 'AI 角色可在 Agent 纯语C里随时切换';
       $delete.hidden = mode === 'user' || !currentId;
+
       const fields = ROLE_CARD_FIELDS.map((field) => {
         const value = escapeAttr(working[field.key] || '');
         const control = field.multiline
@@ -141,6 +402,7 @@
           : `<input name="${field.key}" type="text" value="${value}" placeholder="${escapeAttr(field.placeholder || '')}">`;
         return `<label class="role-card-field"><span>${escapeHtml(field.label)}</span>${control}</label>`;
       }).join('');
+
       const examples = working.examples.map((ex, i) => `
         <div class="role-card-example">
           <b>示 例 ${i + 1}</b>
@@ -148,20 +410,22 @@
           <textarea name="example_${i}_correct" rows="2" placeholder="正确回应">${escapeAttr(ex.correct)}</textarea>
           <textarea name="example_${i}_wrong" rows="2" placeholder="错误回应">${escapeAttr(ex.wrong)}</textarea>
         </div>`).join('');
+
       const backgrounds = working.backgrounds.map((bg, i) => `
         <label class="role-card-field"><span>背景碎片 ${i + 1}</span>
           <textarea name="background_${i}" rows="2" placeholder="补充背景">${escapeAttr(bg)}</textarea>
         </label>`).join('');
-      $form.innerHTML = `
+
+      $('#card-form').innerHTML = `
         <section class="role-card-section"><h3>核心参数表</h3><div class="role-card-grid">${fields}</div></section>
         <section class="role-card-section"><h3>对话示例</h3><div class="role-card-examples">${examples}</div></section>
         <section class="role-card-section"><h3>补充背景</h3><div class="role-card-grid">${backgrounds}</div></section>
         <section class="role-card-section"><h3>自定义补充规则</h3><textarea name="customRules" rows="4" placeholder="额外规则，会拼到角色卡末尾">${escapeAttr(working.customRules || '')}</textarea></section>`;
     }
 
-    function readForm() {
-      const fd = new FormData($form);
-      const card = createEmptyRoleCard();
+    function readFormQuick() {
+      const fd = new FormData($('#card-form'));
+      const card = normalizeRoleCard(working);
       for (const field of ROLE_CARD_FIELDS) card[field.key] = (fd.get(field.key) || '').toString().trim();
       card.examples = [0, 1, 2].map((i) => ({
         scene: (fd.get(`example_${i}_scene`) || '').toString().trim(),
@@ -178,24 +442,32 @@
       currentId = id || null;
       working = id ? normalizeRoleCard(getAiRoleCard(id)) : createEmptyRoleCard();
       renderList();
-      renderForm();
+      renderFormQuick();
     }
     function selectUser() {
       mode = 'user';
       currentId = null;
       working = normalizeRoleCard(getUserRoleCard());
       renderList();
-      renderForm();
+      renderFormQuick();
     }
 
     $list.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-id]');
-      if (btn) selectAi(btn.dataset.id);
+      const editBtn = e.target.closest('button[data-edit-id]');
+      if (editBtn) {
+        const card = getAiRoleCard(editBtn.dataset.editId);
+        if (card) openEditPage(card, { nextMode: 'ai', id: editBtn.dataset.editId, step: 1 });
+      }
     });
-    $new.addEventListener('click', () => selectAi(null));
-    $userEntry.addEventListener('click', selectUser);
-    $save.addEventListener('click', () => {
-      working = readForm();
+    $('#new-ai-card').addEventListener('click', () => {
+      openEditPage(createEmptyRoleCard(), { nextMode: 'ai', id: null, step: 1 });
+    });
+    $('#edit-user-card').addEventListener('click', () => {
+      openEditPage(getUserRoleCard(), { nextMode: 'user', id: null, step: 1 });
+    });
+
+    $('#save-card').addEventListener('click', () => {
+      working = readFormQuick();
       if (mode === 'user') {
         setUserRoleCard(working);
         toast('我的角色已保存', 'success');
@@ -207,9 +479,10 @@
       }
       vibrate('ok');
       renderList();
-      renderForm();
+      renderFormQuick();
     });
-    $delete.addEventListener('click', async () => {
+
+    $('#delete-card').addEventListener('click', async () => {
       if (!currentId) return;
       const ok = await confirmDialog('删除这张 AI 角色卡？已使用它的会话会保留当时的角色快照。', { okLabel: '删 除', cancelLabel: '取 消' });
       if (!ok) return;
@@ -217,56 +490,739 @@
       selectAi(null);
       toast('已删除角色卡', 'success');
     });
-    $clear.addEventListener('click', () => {
+
+    $('#clear-form').addEventListener('click', () => {
       working = createEmptyRoleCard();
-      renderForm();
+      renderFormQuick();
     });
-    $jsonImport.addEventListener('click', () => {
-      try {
-        working = mergeRoleCard(readForm(), parseRoleCardJson($json.value));
-        renderForm();
-        toast('JSON 已导入', 'success');
-      } catch (e) {
-        toast(e.message || String(e), 'error');
-      }
+
+    // 导航按钮
+    $('#goto-customize').addEventListener('click', () => {
+      showPage('customize');
+      resetCustomizeInputs();
     });
-    $jsonClear.addEventListener('click', () => { $json.value = ''; });
-    $jsonFileBtn.addEventListener('click', () => {
-      $jsonFile.value = '';
-      $jsonFile.click();
+
+    $('#goto-import').addEventListener('click', () => {
+      showPage('import');
+      resetImport();
     });
-    $jsonFile.addEventListener('change', async () => {
-      const file = $jsonFile.files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        working = mergeRoleCard(readForm(), parseRoleCardJson(text));
-        $json.value = text;
-        renderForm();
-        toast('JSON 文件已导入', 'success');
-      } catch (e) {
-        toast('导入失败：' + (e.message || e), 'error');
-      }
+
+    $('#goto-create').addEventListener('click', () => {
+      openEditPage(createEmptyRoleCard(), { nextMode: 'ai', id: null, step: 1 });
     });
-    $ai.addEventListener('click', async () => {
+
+    // === 定制页 ===
+    function resetCustomizeInputs() {
+      $('#custom-chat-input').value = '';
+      $('#custom-desc-core').value = '';
+      $('#custom-desc-extra').value = '';
+      $('#custom-novel-input').value = '';
+      $('#custom-chat-count').textContent = '0 / 4096';
+      $('#custom-desc-core-count').textContent = '0 / 1000';
+      $('#custom-desc-extra-count').textContent = '0 / 2000';
+      $('#custom-novel-count').textContent = '0 / 50000';
+    }
+
+    // Tab 切换
+    $pageCustomize.querySelectorAll('.rc-custom-tabs button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        $pageCustomize.querySelectorAll('.rc-custom-tabs button').forEach((b) => b.classList.remove('current'));
+        btn.classList.add('current');
+        const tab = btn.dataset.tab;
+        $pageCustomize.querySelectorAll('.rc-custom-body').forEach((b) => b.hidden = b.id !== `customize-tab-${tab}`);
+      });
+    });
+
+    // 字数统计
+    function bindCharCount(inputId, countId) {
+      const input = $(inputId);
+      const count = $(countId);
+      if (!input || !count) return;
+      input.addEventListener('input', () => {
+        const len = input.value.length;
+        count.textContent = `${len} / ${input.maxLength || input.getAttribute('maxlength') || 0}`;
+      });
+    }
+    bindCharCount('#custom-chat-input', '#custom-chat-count');
+    bindCharCount('#custom-desc-core', '#custom-desc-core-count');
+    bindCharCount('#custom-desc-extra', '#custom-desc-extra-count');
+    bindCharCount('#custom-novel-input', '#custom-novel-count');
+
+    async function runCustomize(modeName, promptFn, inputVal) {
       if (!requireApiKey()) return;
+      const goBtn = $(`#custom-${modeName}-go`);
+      if (!goBtn) return;
+      const origText = goBtn.textContent;
+      goBtn.disabled = true;
+      goBtn.textContent = '生 成 中';
       try {
-        $ai.disabled = true;
-        $ai.textContent = '生 成 中';
-        const raw = await chat(roleCardAiPrompt($seed.value, mode), { jsonMode: true, temperature: 0.75 });
-        working = mergeRoleCard(readForm(), parseRoleCardJson(raw));
-        renderForm();
-        toast('AI 已填好草稿', 'success');
+        const raw = await chat(promptFn(inputVal, 'ai'), { jsonMode: true, temperature: 0.75 });
+        const parsed = parseRoleCardJson(raw);
+        mode = 'ai';
+        currentId = null;
+        working = mergeRoleCard(createEmptyRoleCard(), parsed);
+        showPage('edit');
+        currentStep = 1;
+        renderEditPage();
+        toast('AI 已生成草稿，请检查并保存', 'success');
       } catch (e) {
         toast('AI 生成失败：' + (e.message || e), 'error');
       } finally {
-        $ai.disabled = false;
-        $ai.textContent = 'AI 生 成';
+        goBtn.disabled = false;
+        goBtn.textContent = origText;
+      }
+    }
+
+    $('#custom-chat-go').addEventListener('click', () => {
+      const val = $('#custom-chat-input').value.trim();
+      if (!val) { toast('请先粘贴聊天记录', 'error'); return; }
+      runCustomize('chat', roleCardChatPrompt, val);
+    });
+
+    $('#custom-desc-go').addEventListener('click', () => {
+      const core = $('#custom-desc-core').value.trim();
+      const extra = $('#custom-desc-extra').value.trim();
+      if (!core && !extra) { toast('请先填写描述', 'error'); return; }
+      runCustomize('desc', roleCardDescPrompt, core + '\n\n' + extra);
+    });
+
+    $('#custom-novel-go').addEventListener('click', () => {
+      const val = $('#custom-novel-input').value.trim();
+      if (!val) { toast('请先粘贴小说片段', 'error'); return; }
+      runCustomize('novel', roleCardNovelPrompt, val);
+    });
+
+    $('#customize-cancel').addEventListener('click', () => {
+      working = normalizeRoleCard(working);
+      showPage('list');
+      renderFormQuick();
+    });
+
+    // === 导入页 ===
+    function resetImport() {
+      importedCard = null;
+      $('#import-status').innerHTML = '';
+      $('#import-preview').hidden = true;
+      $('#import-preview').innerHTML = '';
+      $('#import-confirm').hidden = true;
+      $('#import-translate').hidden = true;
+      $('#import-file-input').value = '';
+    }
+
+    const $dropZone = $('#import-drop-zone');
+    const $fileInput = $('#import-file-input');
+
+    $dropZone.addEventListener('click', () => $fileInput.click());
+
+    $dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      $dropZone.classList.add('dragover');
+    });
+    $dropZone.addEventListener('dragleave', () => {
+      $dropZone.classList.remove('dragover');
+    });
+    $dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      $dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) processImportFile(file);
+    });
+
+    $fileInput.addEventListener('change', () => {
+      const file = $fileInput.files[0];
+      if (file) processImportFile(file);
+    });
+
+    async function processImportFile(file) {
+      const status = $('#import-status');
+      status.innerHTML = '<span class="rc-status-pending">正在读取…</span>';
+      try {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext === 'png') {
+          const buf = await file.arrayBuffer();
+          importedCard = parsePngRoleCard(buf);
+          importedCard.avatarDataUrl = await fileToAvatarDataUrl(file);
+        } else if (ext === 'json') {
+          const text = await file.text();
+          importedCard = parseRoleCardJson(text);
+        } else {
+          throw new Error('不支持的文件格式：' + ext);
+        }
+        status.innerHTML = '<span class="rc-status-ok">解析成功：' + escapeHtml(roleCardDisplayName(importedCard) || '未命名角色') + '</span>';
+        renderImportPreview();
+        $('#import-confirm').hidden = false;
+        $('#import-translate').hidden = false;
+      } catch (e) {
+        status.innerHTML = '<span class="rc-status-error">导入失败：' + escapeHtml(e.message || String(e)) + '</span>';
+        toast('导入失败：' + (e.message || e), 'error');
+        importedCard = null;
+        $('#import-confirm').hidden = true;
+        $('#import-translate').hidden = true;
+      }
+    }
+
+    function renderImportPreview() {
+      const preview = $('#import-preview');
+      if (!importedCard) return;
+      preview.hidden = false;
+      const avatarHtml = importedCard.avatarDataUrl
+        ? `<img src="${escapeAttr(importedCard.avatarDataUrl)}" alt="" class="rc-import-avatar">`
+        : `<span class="rc-import-avatar">${escapeHtml(roleCardInitial(importedCard))}</span>`;
+      preview.innerHTML = `
+        <div class="rc-import-preview-card">
+          ${avatarHtml}
+          <div>
+            <b>${escapeHtml(roleCardDisplayName(importedCard) || '未命名角色')}</b>
+            <small>${escapeHtml(importedCard.tags || importedCard.identity || '')}</small>
+            <p>${escapeHtml((importedCard.intro || importedCard.detail || '').slice(0, 200))}</p>
+            <span class="rc-import-meta">版本：${escapeHtml(importedCard.characterVersion || '—')} · 作者：${escapeHtml(importedCard.creator || '—')}</span>
+            ${openingPreviewHtml(importedCard)}
+          </div>
+        </div>`;
+    }
+
+    function translationPrompt(card) {
+      const source = roleCardPromptPayload(card);
+      return [
+        { role: 'system', content: '你是角色卡本地化助手。把英文或混合语言角色卡翻译成简体中文，保持原字段结构、角色设定、语气、专有名词和人称关系，不要删减信息。只输出严格 JSON。' },
+        { role: 'user', content: JSON.stringify(source, null, 2) },
+      ];
+    }
+
+    function roleCardPromptPayload(card) {
+      const source = normalizeRoleCard(card);
+      delete source.avatarDataUrl;
+      source.externalRaw = scrubImagePayload(source.externalRaw);
+      return source;
+    }
+
+    function scrubImagePayload(value) {
+      if (!value || typeof value !== 'object') return value;
+      if (Array.isArray(value)) return value.map(scrubImagePayload).filter((v) => v !== undefined);
+      const out = {};
+      for (const [key, raw] of Object.entries(value)) {
+        if (/avatar|image|img|photo|picture|thumbnail|portrait/i.test(key)) continue;
+        if (typeof raw === 'string' && /^data:image\//i.test(raw.trim())) continue;
+        out[key] = scrubImagePayload(raw);
+      }
+      return Object.keys(out).length ? out : null;
+    }
+
+    async function translateRoleCard(card) {
+      const raw = await chat(translationPrompt(card), { jsonMode: true, temperature: 0.25 });
+      return mergeRoleCard(createEmptyRoleCard(), parseRoleCardJson(raw));
+    }
+
+    async function translateImportedCard() {
+      if (!importedCard) return;
+      if (!requireApiKey()) return;
+      const btn = $('#import-translate');
+      const old = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '翻 译 中';
+      try {
+        const translated = await translateRoleCard(importedCard);
+        translated.avatarDataUrl = importedCard.avatarDataUrl || translated.avatarDataUrl;
+        importedCard = translated;
+        renderImportPreview();
+        toast('已翻译为中文草稿', 'success');
+      } catch (e) {
+        toast('翻译失败：' + (e.message || e), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = old;
+      }
+    }
+
+    $('#import-translate').addEventListener('click', translateImportedCard);
+
+    $('#import-confirm').addEventListener('click', () => {
+      if (!importedCard) return;
+      openEditPage(mergeRoleCard(createEmptyRoleCard(), importedCard), { nextMode: 'ai', id: null, step: firstOpeningText(importedCard) ? 3 : 1 });
+      toast('已导入，请编辑草稿', 'success');
+    });
+
+    $('#import-cancel').addEventListener('click', () => {
+      resetImport();
+      showPage('list');
+    });
+
+    // === 编辑页 ===
+    function renderEditPage() {
+      working = normalizeRoleCard(working);
+      if (mode === 'user') {
+        $('#edit-page-title').textContent = '编 辑 我 的 角 色';
+      } else {
+        $('#edit-page-title').textContent = '编 辑' + (working.roleName ? '：' + working.roleName : '：未命名角色');
+      }
+      const head = $('#page-edit .role-cards-head');
+      if (head) {
+        let preview = head.querySelector('.rc-opening-preview');
+        const html = openingPreviewHtml(working);
+        if (html) {
+          if (!preview) head.insertAdjacentHTML('beforeend', html);
+          else preview.outerHTML = html;
+        } else if (preview) {
+          preview.remove();
+        }
+      }
+      renderEditStep();
+      updateStepNav();
+      updateEditFoot();
+    }
+
+    function updateStepNav() {
+      const nav = $('#rc-step-nav');
+      nav.querySelectorAll('button').forEach((btn) => {
+        const s = parseInt(btn.dataset.step);
+        btn.classList.toggle('current', s === currentStep);
+        btn.classList.toggle('done', s < currentStep);
+      });
+    }
+
+    function updateEditFoot() {
+      const $prev = $('#edit-prev');
+      const $next = $('#edit-next');
+      const $save = $('#edit-save');
+      $prev.disabled = currentStep <= 1;
+      if (currentStep >= 4) {
+        $next.hidden = true;
+        $save.hidden = false;
+      } else {
+        $next.hidden = false;
+        $save.hidden = true;
+      }
+    }
+
+    function readEditStep() {
+      const stepDivs = $('#edit-step-1').parentElement.children;
+      const currentDiv = Array.from(stepDivs).find((d) => !d.hidden && d.id.startsWith('edit-step-'));
+      if (!currentDiv) return;
+      const fd = formDataFrom(currentDiv);
+
+      if (currentStep === 1) {
+        working.avatarDataUrl = (fd.get('edit_avatarDataUrl') || '').toString().trim();
+        for (const field of ROLE_CARD_FIELDS) {
+          working[field.key] = (fd.get('edit_' + field.key) || '').toString().trim();
+        }
+      } else if (currentStep === 2) {
+        working.intro = (fd.get('edit-intro') || '').toString().trim();
+        working.detail = (fd.get('edit-detail') || '').toString().trim();
+        working.scene = (fd.get('edit-scene') || '').toString().trim();
+        working.systemInstruction = (fd.get('edit-systemInstruction') || '').toString().trim();
+        working.postHistoryInstructions = (fd.get('edit-postHistoryInstructions') || '').toString().trim();
+        working.tags = (fd.get('edit-tags') || '').toString().trim();
+        working.creator = (fd.get('edit-creator') || '').toString().trim();
+        working.characterVersion = (fd.get('edit-characterVersion') || '').toString().trim();
+        // 专家模式字段
+        for (const field of ROLE_CARD_FIELDS) {
+          const v = fd.get('edit-legacy-' + field.key);
+          if (v !== null) working[field.key] = v.toString().trim();
+        }
+        working.examples = [0, 1, 2].map((i) => ({
+          scene: (fd.get('edit-legacy-example_' + i + '_scene') || '').toString().trim(),
+          correct: (fd.get('edit-legacy-example_' + i + '_correct') || '').toString().trim(),
+          wrong: (fd.get('edit-legacy-example_' + i + '_wrong') || '').toString().trim(),
+        }));
+        working.backgrounds = [0, 1, 2, 3].map((i) => (fd.get('edit-legacy-bg_' + i) || '').toString().trim());
+        working.customRules = (fd.get('edit-customRules') || '').toString().trim();
+      } else if (currentStep === 3) {
+        const roles = currentDiv.querySelectorAll('.rc-opening-item [name$="_role"]');
+        const contents = currentDiv.querySelectorAll('.rc-opening-item textarea');
+        const dialogues = [];
+        for (let i = 0; i < roles.length; i++) {
+          const role = roles[i].value === 'user' ? 'user' : 'ai';
+          const content = (contents[i]?.value || '').trim();
+          if (content) dialogues.push({ role, content });
+        }
+        if (dialogues.length && dialogues[0].role === 'user') dialogues.unshift({ role: 'ai', content: '' });
+        if (!dialogues.length) dialogues.push({ role: 'ai', content: '' });
+        working.openingDialogues = dialogues;
+      } else if (currentStep === 4) {
+        const entries = [];
+        let idx = 0;
+        while (true) {
+          const keys = fd.get(`wb_keys_${idx}`);
+          if (keys === null) break;
+          const content = fd.get(`wb_content_${idx}`) || '';
+          const enabled = fd.get(`wb_enabled_${idx}`) === 'on';
+          const constant = fd.get(`wb_constant_${idx}`) === 'on';
+          entries.push({ keys: keys.toString().trim(), content: content.toString().trim(), enabled, constant });
+          idx++;
+        }
+        working.worldBook = entries;
+      }
+    }
+
+    function formDataFrom(root) {
+      const fd = new FormData();
+      root.querySelectorAll('input, textarea, select').forEach((el) => {
+        if (!el.name || el.disabled) return;
+        if ((el.type === 'checkbox' || el.type === 'radio') && !el.checked) return;
+        fd.append(el.name, el.value);
+      });
+      return fd;
+    }
+
+    function renderEditStep() {
+      const stepDivs = $('#edit-step-1').parentElement.children;
+      Array.from(stepDivs).forEach((d) => d.hidden = true);
+
+      if (currentStep === 1) {
+        renderEditStep1();
+      } else if (currentStep === 2) {
+        renderEditStep2();
+      } else if (currentStep === 3) {
+        renderEditStep3();
+      } else if (currentStep === 4) {
+        renderEditStep4();
+      }
+    }
+
+    function renderEditStep1() {
+      const container = $('#edit-step-1');
+      container.hidden = false;
+      const grid = $('#edit-core-grid');
+      grid.innerHTML = ROLE_CARD_FIELDS.map((field) => {
+        const value = escapeAttr(working[field.key] || '');
+        const control = field.multiline
+          ? `<textarea name="edit_${field.key}" rows="3" placeholder="${escapeAttr(field.placeholder || '')}">${value}</textarea>`
+          : `<input name="edit_${field.key}" type="text" value="${value}" placeholder="${escapeAttr(field.placeholder || '')}">`;
+        return `<label class="role-card-field"><span>${escapeHtml(field.label)}</span>${control}</label>`;
+      }).join('');
+
+      // 头像
+      const avatarHtml = working.avatarDataUrl
+        ? `<img src="${escapeAttr(working.avatarDataUrl)}" class="rc-edit-avatar" alt="">`
+        : `<span class="rc-edit-avatar-placeholder">${escapeHtml(roleCardInitial(working))}</span>`;
+      grid.insertAdjacentHTML('afterbegin', `<label class="role-card-field"><span>头像</span>
+        <div class="rc-avatar-row">
+          ${avatarHtml}
+          <input name="edit_avatarDataUrl" type="text" value="${escapeAttr(working.avatarDataUrl || '')}" placeholder="粘贴图片 data URL 或链接">
+          <button type="button" class="rc-quiet-btn rc-avatar-upload" data-avatar-upload>本 地 上 传</button>
+          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-avatar-file hidden>
+        </div>
+      </label>`);
+    }
+
+    $('#edit-core-grid').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-avatar-upload]');
+      if (!btn) return;
+      const input = btn.parentElement?.querySelector('[data-avatar-file]');
+      if (input) input.click();
+    });
+
+    $('#edit-core-grid').addEventListener('change', async (e) => {
+      const input = e.target.closest('[data-avatar-file]');
+      if (!input) return;
+      const file = input.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        toast('请选择图片文件', 'error');
+        input.value = '';
+        return;
+      }
+      try {
+        readEditStep();
+        working.avatarDataUrl = await fileToAvatarDataUrl(file);
+        renderEditStep1();
+        toast('头像已载入，保存后持久化', 'success');
+      } catch (err) {
+        toast('头像读取失败：' + (err.message || err), 'error');
       }
     });
 
+    function renderEditStep2() {
+      const container = $('#edit-step-2');
+      container.hidden = false;
+      container.querySelector('[name="edit-intro"]').value = working.intro || '';
+      container.querySelector('[name="edit-detail"]').value = working.detail || '';
+      container.querySelector('[name="edit-scene"]').value = working.scene || '';
+      container.querySelector('[name="edit-systemInstruction"]').value = working.systemInstruction || '';
+      container.querySelector('[name="edit-postHistoryInstructions"]').value = working.postHistoryInstructions || '';
+      container.querySelector('[name="edit-tags"]').value = working.tags || '';
+      container.querySelector('[name="edit-creator"]').value = working.creator || '';
+      container.querySelector('[name="edit-characterVersion"]').value = working.characterVersion || '';
+      container.querySelector('[name="edit-customRules"]').value = working.customRules || '';
+
+      // 外部元数据
+      const extText = working.externalRaw ? JSON.stringify(working.externalRaw, null, 2) : '';
+      container.querySelector('[name="edit-externalRaw"]').value = extText;
+
+      // 专家模式 - 旧有字段
+      const legacyGrid = $('#edit-legacy-grid');
+      legacyGrid.innerHTML = ROLE_CARD_FIELDS.map((field) => {
+        const value = escapeAttr(working[field.key] || '');
+        return `<label class="role-card-field"><span>${escapeHtml(field.label)}</span>
+          <textarea name="edit-legacy-${field.key}" rows="2" placeholder="${escapeAttr(field.placeholder || '')}">${value}</textarea></label>`;
+      }).join('');
+
+      const legacyExamples = $('#edit-legacy-examples');
+      legacyExamples.innerHTML = working.examples.map((ex, i) => `
+        <div class="role-card-example">
+          <b>示 例 ${i + 1}</b>
+          <input name="edit-legacy-example_${i}_scene" type="text" value="${escapeAttr(ex.scene)}" placeholder="场景">
+          <textarea name="edit-legacy-example_${i}_correct" rows="2" placeholder="正确回应">${escapeAttr(ex.correct)}</textarea>
+          <textarea name="edit-legacy-example_${i}_wrong" rows="2" placeholder="错误回应">${escapeAttr(ex.wrong)}</textarea>
+        </div>`).join('');
+
+      const legacyBgs = $('#edit-legacy-bgs');
+      legacyBgs.innerHTML = working.backgrounds.map((bg, i) => `
+        <label class="role-card-field"><span>背景碎片 ${i + 1}</span>
+          <textarea name="edit-legacy-bg_${i}" rows="2" placeholder="补充背景">${escapeAttr(bg)}</textarea></label>`).join('');
+
+      // 专家模式开关
+      const expertCheck = $('#edit-expert-mode');
+      expertCheck.checked = $('#edit-expert-area').hidden === false;
+      updateExpertMode();
+    }
+
+    function updateExpertMode() {
+      const checked = $('#edit-expert-mode').checked;
+      $('#edit-expert-area').hidden = !checked;
+    }
+
+    $('#edit-expert-mode').addEventListener('change', updateExpertMode);
+
+    async function translateWorkingCard() {
+      readEditStep();
+      if (!requireApiKey()) return;
+      const btn = $('#edit-translate');
+      const old = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '翻 译 中';
+      try {
+        const before = normalizeRoleCard(working);
+        const translated = await translateRoleCard(before);
+        translated.avatarDataUrl = before.avatarDataUrl || translated.avatarDataUrl;
+        working = translated;
+        renderEditPage();
+        toast('已翻译为中文草稿', 'success');
+      } catch (e) {
+        toast('翻译失败：' + (e.message || e), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = old;
+      }
+    }
+
+    $('#edit-translate').addEventListener('click', translateWorkingCard);
+
+    function renderEditStep3() {
+      const container = $('#edit-step-3');
+      container.hidden = false;
+      const list = $('#edit-opening-list');
+      const dlogs = working.openingDialogues && working.openingDialogues.length
+        ? working.openingDialogues
+        : [{ role: 'ai', content: '' }];
+      list.innerHTML = dlogs.map((d, i) => `
+        <div class="rc-opening-item">
+          <div class="rc-opening-head">
+            <span>对 白 ${i + 1}</span>
+            <select name="opening_${i}_role" class="rc-opening-role">
+              <option value="ai" ${d.role === 'ai' ? 'selected' : ''}>AI 消息</option>
+              <option value="user" ${d.role === 'user' ? 'selected' : ''}>用户消息</option>
+            </select>
+            <button type="button" class="rc-remove-btn" data-idx="${i}">删 除</button>
+          </div>
+          <textarea name="opening_${i}_content" rows="4" placeholder="开场内容">${escapeAttr(d.content || '')}</textarea>
+        </div>`).join('');
+
+      // 绑定删除
+      list.querySelectorAll('.rc-remove-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.idx);
+          // 先读再删
+          readEditStepInner(list);
+          if (working.openingDialogues.length <= 1) {
+            working.openingDialogues = [{ role: 'ai', content: '' }];
+          } else {
+            working.openingDialogues.splice(idx, 1);
+          }
+          renderEditStep3();
+        });
+      });
+
+      // 添加按钮
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'rc-add-btn';
+      addBtn.textContent = '+ 添 加 对 白';
+      addBtn.addEventListener('click', () => {
+        readEditStepInner(list);
+        working.openingDialogues.push({ role: 'ai', content: '' });
+        renderEditStep3();
+      });
+      list.appendChild(addBtn);
+    }
+
+    function readEditStepInner(container) {
+      // 只在渲染前读取当前步骤数据
+      if (currentStep === 3 && container) {
+        const roles = container.querySelectorAll('.rc-opening-item [name^="opening_"][name$="_role"]');
+        const contents = container.querySelectorAll('.rc-opening-item textarea');
+        const dialogues = [];
+        for (let i = 0; i < roles.length; i++) {
+          const role = roles[i].value === 'user' ? 'user' : 'ai';
+          const content = (contents[i]?.value || '').trim();
+          if (content) dialogues.push({ role, content });
+        }
+        if (dialogues.length && dialogues[0].role === 'user') dialogues.unshift({ role: 'ai', content: '' });
+        if (!dialogues.length) dialogues.push({ role: 'ai', content: '' });
+        working.openingDialogues = dialogues;
+      }
+    }
+
+    function renderEditStep4() {
+      const container = $('#edit-step-4');
+      container.hidden = false;
+      const list = $('#edit-worldbook-list');
+      const wb = working.worldBook && working.worldBook.length
+        ? working.worldBook
+        : [{ keys: '', content: '', enabled: true, constant: false }];
+      list.innerHTML = wb.map((e, i) => `
+        <div class="rc-wb-item">
+          <div class="rc-wb-head">
+            <span>条 目 ${i + 1}</span>
+            <label class="rc-wb-check"><input name="wb_enabled_${i}" type="checkbox" ${e.enabled ? 'checked' : ''}> 启 用</label>
+            <label class="rc-wb-check"><input name="wb_constant_${i}" type="checkbox" ${e.constant ? 'checked' : ''}> 常 驻</label>
+            <button type="button" class="rc-remove-btn" data-idx="${i}">删 除</button>
+          </div>
+          <input name="wb_keys_${i}" type="text" value="${escapeAttr(e.keys || '')}" placeholder="关键词（逗号分隔）" class="rc-wb-keys">
+          <textarea name="wb_content_${i}" rows="3" placeholder="条目内容">${escapeAttr(e.content || '')}</textarea>
+        </div>`).join('');
+
+      bindWorldBookRemoveButtons(list);
+
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'rc-add-btn';
+      addBtn.textContent = '+ 添 加 条 目';
+      addBtn.addEventListener('click', () => {
+        const idx = list.querySelectorAll('.rc-wb-item').length;
+        const el = document.createElement('div');
+        el.className = 'rc-wb-item';
+        el.innerHTML = `
+          <div class="rc-wb-head">
+            <span>条 目 ${idx + 1}</span>
+            <label class="rc-wb-check"><input name="wb_enabled_${idx}" type="checkbox" checked> 启 用</label>
+            <label class="rc-wb-check"><input name="wb_constant_${idx}" type="checkbox"> 常 驻</label>
+            <button type="button" class="rc-remove-btn" data-idx="${idx}">删 除</button>
+          </div>
+          <input name="wb_keys_${idx}" type="text" placeholder="关键词（逗号分隔）" class="rc-wb-keys">
+          <textarea name="wb_content_${idx}" rows="3" placeholder="条目内容"></textarea>`;
+        addBtn.before(el);
+        bindWorldBookRemoveButtons(list);
+      });
+      list.appendChild(addBtn);
+    }
+
+    function bindWorldBookRemoveButtons(list) {
+      list.querySelectorAll('.rc-remove-btn').forEach((btn) => {
+        if (btn._bound) return;
+        btn._bound = true;
+        btn.addEventListener('click', () => {
+          const item = btn.closest('.rc-wb-item');
+          if (!item) return;
+          if (list.querySelectorAll('.rc-wb-item').length <= 1) {
+            item.querySelectorAll('input[type="text"], textarea').forEach((el) => { el.value = ''; });
+            item.querySelectorAll('input[type="checkbox"]').forEach((el) => { el.checked = el.name.includes('enabled'); });
+            return;
+          }
+          item.remove();
+          renumberWorldBook(list);
+        });
+      });
+    }
+
+    function renumberWorldBook(list) {
+      list.querySelectorAll('.rc-wb-item').forEach((item, i) => {
+        const title = item.querySelector('.rc-wb-head span');
+        if (title) title.textContent = `条 目 ${i + 1}`;
+        const enabled = item.querySelector('[name^="wb_enabled_"]');
+        const constant = item.querySelector('[name^="wb_constant_"]');
+        const keys = item.querySelector('[name^="wb_keys_"]');
+        const content = item.querySelector('[name^="wb_content_"]');
+        const remove = item.querySelector('.rc-remove-btn');
+        if (enabled) enabled.name = `wb_enabled_${i}`;
+        if (constant) constant.name = `wb_constant_${i}`;
+        if (keys) keys.name = `wb_keys_${i}`;
+        if (content) content.name = `wb_content_${i}`;
+        if (remove) remove.dataset.idx = String(i);
+      });
+    }
+
+    // 步骤导航
+    $('#rc-step-nav').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-step]');
+      if (!btn) return;
+      const targetStep = parseInt(btn.dataset.step);
+      if (targetStep === currentStep) return;
+      readEditStep();
+      currentStep = targetStep;
+      renderEditStep();
+      updateStepNav();
+      updateEditFoot();
+    });
+
+    $('#edit-prev').addEventListener('click', () => {
+      readEditStep();
+      if (currentStep > 1) {
+        currentStep--;
+        renderEditStep();
+        updateStepNav();
+        updateEditFoot();
+      }
+    });
+
+    $('#edit-next').addEventListener('click', () => {
+      readEditStep();
+      if (currentStep < 4) {
+        currentStep++;
+        renderEditStep();
+        updateStepNav();
+        updateEditFoot();
+      }
+    });
+
+    $('#edit-save').addEventListener('click', () => {
+      readEditStep();
+      working = normalizeRoleCard(working);
+      if (mode === 'user') {
+        setUserRoleCard(working);
+        toast('我的角色已保存', 'success');
+      } else {
+        const saved = saveAiRoleCard(working, currentId);
+        currentId = saved.id;
+        working = normalizeRoleCard(getAiRoleCard(currentId) || saved);
+        toast('AI 角色已保存', 'success');
+      }
+      vibrate('ok');
+      showPage('list');
+      renderList();
+      renderFormQuick();
+    });
+
+    $('#edit-cancel').addEventListener('click', async () => {
+      if (working.roleName || working.detail) {
+        const ok = await confirmDialog('放弃编辑？未保存的改动将丢失。', { okLabel: '放 弃', cancelLabel: '继 续 编' });
+        if (!ok) return;
+      }
+      showPage('list');
+      renderFormQuick();
+    });
+
+    // 步骤间的 working 同步（切换步骤前读取）
+    function stepTransition(newStep) {
+      readEditStep();
+      currentStep = newStep;
+    }
+
+    // 初始化
     renderList();
-    selectAi(listAiRoleCards()[0]?.id || null);
+    const firstCard = listAiRoleCards()[0];
+    if (firstCard) selectAi(firstCard.id);
+    else selectAi(null);
   </script>
 </body>
 </html>
