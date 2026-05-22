@@ -1,3 +1,4 @@
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { readdirSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { defineConfig } from 'vite';
@@ -47,10 +48,24 @@ function viteRouteAliases() {
   };
 }
 
+function rootLandingFallback() {
+  return {
+    name: 'wenshu-root-landing-fallback',
+    closeBundle() {
+      const landingHtml = resolve(root, 'dist/landing/index.html');
+      const rootHtml = resolve(root, 'dist/index.html');
+      if (!existsSync(landingHtml)) return;
+      const html = readFileSync(landingHtml, 'utf8')
+        .replaceAll('../www/', './www/');
+      writeFileSync(rootHtml, html);
+    },
+  };
+}
+
 export default defineConfig({
   appType: 'mpa',
   base: './',
-  plugins: [viteRouteAliases()],
+  plugins: [viteRouteAliases(), rootLandingFallback()],
   server: {
     host: '0.0.0.0',
     open: '/www/html/index.html',
