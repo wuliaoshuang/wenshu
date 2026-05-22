@@ -2346,7 +2346,7 @@ body.agent-mode {
   font-family: var(--font-mincho);
   border-bottom-left-radius: 6px;
 }
-.bubble.ai.streaming-caret::after {
+.bubble.ai > .message-body.streaming-caret::after {
   display: inline;
 }
 
@@ -2368,7 +2368,7 @@ body.agent-mode {
   vertical-align: -2px;
 }
 
-.bubble.ai.awaiting-content.streaming-caret::after {
+.bubble.ai.awaiting-content > .message-body.streaming-caret::after {
   content: none;
 }
 

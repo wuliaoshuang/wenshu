@@ -365,7 +365,6 @@
         thinkingOpen: false,
       });
       if (msg.role === 'ai' && msg.streaming && !hasContent) el.classList.add('awaiting-content');
-      if (msg.streaming) el.classList.add('streaming-caret');
       return el;
     }
 
@@ -405,7 +404,6 @@
         thinkingOpen: ycThinkingOpen,
       });
       if (msg.role === 'ai' && msg.streaming && !hasContent) bubble.classList.add('awaiting-content');
-      if (msg.streaming) bubble.classList.add('streaming-caret');
       if (msg.role === 'user') { wrap.appendChild(bubble); wrap.appendChild(avatar); }
       else { wrap.appendChild(avatar); wrap.appendChild(bubble); }
       return wrap;
@@ -414,12 +412,13 @@
     function renderBubbleContent(bubble, { role, content = '', streaming = false, thinking = null, thinkingOpen = false } = {}) {
       const hasContent = !!String(content || '').trim();
       const placeholderThinking = role === 'ai' && streaming && !hasContent && !thinking;
-      const visibleThinking = thinking || (placeholderThinking ? '正在思考…' : null);
+      const visibleThinking = thinking || (placeholderThinking ? '思考中' : null);
       bubble.innerHTML = '';
       if (visibleThinking) bubble.appendChild(renderThinkingDOM(visibleThinking, thinkingOpen, placeholderThinking));
       const body = document.createElement('div');
       body.className = 'message-body';
       body.innerHTML = hasContent ? renderMd(content || '') : renderLoadingDOM({ role, streaming });
+      body.classList.toggle('streaming-caret', streaming && hasContent);
       bubble.appendChild(body);
     }
 
@@ -502,11 +501,11 @@
       } else if (!streaming) {
         body.innerHTML = '';
       }
-      bubble.classList.toggle('streaming-caret', streaming && hasContent);
+      body.classList.toggle('streaming-caret', streaming && hasContent);
       bubble.classList.toggle('awaiting-content', streaming && !hasContent);
       const nextThinking = thinking ?? existingThinking;
       const placeholderThinking = streaming && !hasContent && !nextThinking;
-      patchThinkingDOM(bubble, nextThinking || (placeholderThinking ? '正在思考…' : null), thinkingWasOpen, placeholderThinking);
+      patchThinkingDOM(bubble, nextThinking || (placeholderThinking ? '思考中' : null), thinkingWasOpen, placeholderThinking);
       patchAgentMessage(sessionId, msgId, { content, streaming, ...(nextThinking ? { thinking: nextThinking } : {}) }, isYcMode() ? 'ycMessages' : 'messages');
     }
 
