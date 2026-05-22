@@ -138,7 +138,7 @@ export function normalizeRoleCard(input = {}) {
   }
 
   // 核心字段
-  for (const field of ROLE_CARD_FIELDS) {
+  for (const field of ROLE_CARD_FIELDS.filter((field) => field.key !== 'avatarDataUrl')) {
     base[field.key] = cleanText(pick(src, field.key));
   }
   base.examples = normalizeExamples(pick(src, 'examples'));

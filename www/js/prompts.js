@@ -42,6 +42,30 @@ export function titlesPrompt(spec) {
   ];
 }
 
+// === 会话短标题生成 ===
+export function sessionTitlePrompt(dialog, { mode = "agent", roleName = "" } = {}) {
+  const compact = (dialog || [])
+    .filter((m) => m && m.content)
+    .slice(0, 8)
+    .map((m) => `${m.role === "assistant" ? "AI" : "用户"}：${String(m.content).slice(0, 180)}`)
+    .join("\n");
+  const sys = `你是会话标题编辑。根据初次对话生成一个中文短标题。
+要求：
+- 4 到 10 个汉字，最多 14 个字符。
+- 像聊天列表标题，不像小说书名，不要加书名号、引号、标点。
+- 只返回严格 JSON：{"title":"短标题"}`;
+  const user = `模式：${mode === "yc" ? "角色扮演" : "Agent 写作工坊"}
+${roleName ? `当前 AI 角色：${roleName}\n` : ""}
+初次对话：
+${compact}
+
+请生成一个适合会话列表的短标题。`;
+  return [
+    { role: "system", content: sys },
+    { role: "user", content: user },
+  ];
+}
+
 // === Logline + 故事概述 ===
 export function loglinePrompt(spec) {
   const sys = `你是中文小说编辑。${GOLDEN_RULES}

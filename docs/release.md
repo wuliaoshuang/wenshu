@@ -5,8 +5,8 @@
 推送版本 tag 会自动构建 Web 产物并创建 GitHub Release：
 
 ```sh
-git tag v5.13
-git push origin v5.13
+git tag v5.14
+git push origin v5.14
 ```
 
 工作流会上传 `wenshu-web-<version>.zip`，内容来自 `npm run build` 生成的 `dist/`。
@@ -42,4 +42,4 @@ Cordova Android 13 的 release 默认可能产出 AAB，因此 CI 在 `build.and
 - `config.xml`
 - 关于页版本展示
 
-tag 使用 `v` 前缀，例如当前版本 `5.13` 对应 `v5.13`。
+tag 使用 `v` 前缀，例如当前版本 `5.14` 对应 `v5.14`。

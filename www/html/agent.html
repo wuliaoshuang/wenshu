@@ -165,6 +165,7 @@
     import {
       titlesPrompt, loglinePrompt, outlinePrompt, charactersPrompt,
       microPrompt, chapterPrompt, summaryPrompt, ycChatPrompt, agentPlannerPrompt,
+      sessionTitlePrompt,
     } from '../js/prompts.js';
     import { STYLE_CARDS } from '../js/styles.js';
     import {
@@ -244,6 +245,8 @@
       { label: '♡',            insert: '{亲密氛围：}' },
       { label: '♡',            insert: '{情绪加深：}' },
     ];
+
+    let sessionTitleRunSeq = 0;
 
     // ===== 「采用入库」：把当前 Agent 沙盒成果复制成一本正式 novel =====
     // 启用条件：有 logline + 有大纲 + 至少一章正文 —— 否则入库进去是个空壳，不值
@@ -361,21 +364,38 @@
       return el;
     }
 
+    function renderAvatarInto(el, card, fallback) {
+      const avatar = card?.avatarDataUrl;
+      if (avatar) {
+        const img = document.createElement('img');
+        img.src = avatar;
+        img.alt = '';
+        el.textContent = '';
+        el.appendChild(img);
+        return;
+      }
+      el.textContent = roleCardInitial(card, fallback);
+    }
+
+    function activeAiRoleCard() {
+      const current = session?.roleCardId ? getAiRoleCard(session.roleCardId) : null;
+      return normalizeRoleCard(current || session?.roleCard || {});
+    }
+
     function renderYcBubbleDOM(msg) {
       const wrap = document.createElement('div');
       wrap.className = 'yc-line ' + (msg.role === 'user' ? 'user' : 'ai');
       const avatar = document.createElement('div');
       avatar.className = 'yc-avatar';
-      avatar.textContent = msg.role === 'user'
-        ? roleCardInitial(getUserRoleCard(), '我')
-        : roleCardInitial(session?.roleCard, '墨');
+      if (msg.role === 'user') renderAvatarInto(avatar, getUserRoleCard(), '我');
+      else renderAvatarInto(avatar, activeAiRoleCard(), '墨');
       const bubble = document.createElement('div');
       bubble.className = 'bubble ' + (msg.role === 'user' ? 'user' : 'ai');
       const hasContent = !!String(msg.content || '').trim();
       bubble.innerHTML = hasContent ? renderMd(msg.content || '') : renderLoadingDOM(msg);
       if (msg.role === 'ai' && msg.streaming && !hasContent) bubble.classList.add('awaiting-content');
       if (msg.streaming) bubble.classList.add('streaming-caret');
-      if (msg.thinking) bubble.prepend(renderThinkingDOM(msg.thinking));
+      if (msg.thinking && hasContent) bubble.prepend(renderThinkingDOM(msg.thinking));
       if (msg.role === 'user') { wrap.appendChild(bubble); wrap.appendChild(avatar); }
       else { wrap.appendChild(avatar); wrap.appendChild(bubble); }
       return wrap;
@@ -383,7 +403,7 @@
 
     function renderLoadingDOM(msg) {
       return msg.role === 'ai' && msg.streaming
-        ? '<span class="message-loading" aria-label="正在生成"></span>'
+        ? '<span class="message-loading" aria-label="正在生成" data-loading="1"></span>'
         : '';
     }
 
@@ -442,11 +462,17 @@
       const existingThinking = thinking === null ? bubble.querySelector('.thinking-body')?.textContent : null;
       const thinkingWasOpen = isYcMode() ? ycThinkingOpen : !!bubble.querySelector('.thinking-fold')?.open;
       const hasContent = !!String(content || '').trim();
-      bubble.innerHTML = hasContent ? renderMd(content || '') : renderLoadingDOM({ role: 'ai', streaming });
+      if (hasContent) {
+        bubble.innerHTML = renderMd(content || '');
+      } else if (streaming && !bubble.querySelector('.message-loading')) {
+        bubble.innerHTML = renderLoadingDOM({ role: 'ai', streaming });
+      } else if (!streaming) {
+        bubble.innerHTML = '';
+      }
       bubble.classList.toggle('streaming-caret', streaming && hasContent);
       bubble.classList.toggle('awaiting-content', streaming && !hasContent);
       const nextThinking = thinking ?? existingThinking;
-      if (nextThinking) bubble.prepend(renderThinkingDOM(nextThinking, thinkingWasOpen));
+      if (nextThinking && hasContent) bubble.prepend(renderThinkingDOM(nextThinking, thinkingWasOpen));
       patchAgentMessage(sessionId, msgId, { content, streaming, ...(nextThinking ? { thinking: nextThinking } : {}) }, isYcMode() ? 'ycMessages' : 'messages');
     }
 
@@ -788,6 +814,67 @@
         .map((m) => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content || '' }));
     }
 
+    function hasRealSessionTitle() {
+      return !!(session?.title && session.title !== '未命名 · Agent');
+    }
+
+    function fallbackShortTitle(text) {
+      const clean = String(text || '')
+        .replace(/\[[^\]]+\]/g, '')
+        .replace(/[{}#*_`>~｜|]+/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (!clean) return '';
+      return clean.length > 14 ? clean.slice(0, 14) : clean;
+    }
+
+    async function ensureSessionTitle(lane = isYcMode() ? 'ycMessages' : 'messages') {
+      if (!session || hasRealSessionTitle() || session.titleGenerating) return;
+      const list = Array.isArray(session[lane]) ? session[lane] : [];
+      const textMessages = list.filter((m) => m.kind === 'text' && !m.streaming && String(m.content || '').trim());
+      const hasUser = textMessages.some((m) => m.role === 'user');
+      const hasAi = textMessages.some((m) => m.role === 'ai');
+      if (!hasUser || !hasAi) return;
+      session.titleGenerating = true;
+      const runSeq = ++sessionTitleRunSeq;
+      updateAgentSession(sessionId, { titleGenerating: true });
+      const fallback = fallbackShortTitle(textMessages.find((m) => m.role === 'user')?.content);
+      try {
+        const dialog = textMessages.slice(0, 8).map((m) => ({
+          role: m.role === 'ai' ? 'assistant' : 'user',
+          content: m.content || '',
+        }));
+        const raw = await chat(sessionTitlePrompt(dialog, {
+          mode: lane === 'ycMessages' ? 'yc' : 'agent',
+          roleName: lane === 'ycMessages' ? currentAiRoleName() : '',
+        }), {
+          jsonMode: true,
+          temperature: 0.25,
+          model: 'deepseek-v4-flash',
+        });
+        const parsed = parseJson(raw);
+        if (runSeq !== sessionTitleRunSeq) return;
+        const title = String(parsed?.title || '').replace(/[《》「」"“”'.,，。！？!?：:；;、]/g, '').trim();
+        const nextTitle = (title && title.length <= 16 ? title : title.slice(0, 16)) || fallback;
+        if (nextTitle) {
+          session.title = nextTitle;
+          updateAgentSession(sessionId, { title: nextTitle, titleGenerating: false });
+          renderSessionList();
+          return;
+        }
+      } catch {
+        if (runSeq !== sessionTitleRunSeq) return;
+        if (fallback) {
+          session.title = fallback;
+          updateAgentSession(sessionId, { title: fallback, titleGenerating: false });
+          renderSessionList();
+          return;
+        }
+      }
+      session.titleGenerating = false;
+      updateAgentSession(sessionId, { titleGenerating: false });
+    }
+
     function firstRoleCardOpening(card) {
       const c = normalizeRoleCard(card || {});
       return (c.openingDialogues || []).find((d) => d.role === 'ai' && String(d.content || '').trim())?.content?.trim() || '';
@@ -801,6 +888,32 @@
       const msg = appendAgentMessage(sessionId, { role: 'ai', kind: 'text', content: opening }, 'ycMessages');
       renderMessage(msg);
       scrollToBottom();
+    }
+
+    function hasYcConversation() {
+      return Array.isArray(session?.ycMessages)
+        && session.ycMessages.some((m) => m.kind === 'text' && String(m.content || '').trim());
+    }
+
+    async function confirmRoleConversationReset(nextName) {
+      if (!hasYcConversation()) return true;
+      return await confirmDialog(
+        `切换到「${escapeHtml(nextName || '未设置角色')}」会清空当前角色扮演对话。<br><br>这样可以避免上一张角色卡的提示词和上下文串到新对话里。`,
+        { okLabel: '清 空 并 切 换', cancelLabel: '取 消' }
+      );
+    }
+
+    function clearYcConversationForRoleSwitch() {
+      if (!session) return;
+      sessionTitleRunSeq++;
+      session.ycMessages = [];
+      if (session.titleGenerating) session.titleGenerating = false;
+      const patch = { ycMessages: [], titleGenerating: false };
+      if (session.title && !((session.messages || []).some((m) => m.kind === 'text' && String(m.content || '').trim()))) {
+        session.title = null;
+        patch.title = null;
+      }
+      updateAgentSession(sessionId, patch);
     }
 
     // ===== 调用规划器 =====
@@ -852,7 +965,7 @@
     }
 
     function currentAiRoleName() {
-      return roleCardDisplayName(session?.roleCard) || '';
+      return roleCardDisplayName(activeAiRoleCard()) || '';
     }
 
     function refreshRoleButtonLabel() {
@@ -886,6 +999,10 @@
 
     function openRoleCardModal() {
       if (!session) return;
+      if (busy) {
+        toast('请先停止当前输出，再切换角色', 'error');
+        return;
+      }
       renderRoleCardPicker();
       $roleCardModal.hidden = false;
       $roleCardModal.setAttribute('aria-hidden', 'false');
@@ -1150,6 +1267,7 @@
           }
           if (plan.patch) applyPatch(plan.patch);
           if (plan.say) await pushStreamingBubble(plan.say, { thinking: isProModel() ? planThinkingSummary(plan) : null });
+          ensureSessionTitle('messages');
           if (stopRequested) break;
           let pushedQ = false;
           if (plan.qcard && plan.qcard.type) {
@@ -1187,7 +1305,7 @@
         renderMessage(bubbleMsg);
         scrollToBottom();
 
-        const ycSession = { ...session, userRoleCard: getUserRoleCard() };
+        const ycSession = { ...session, roleCard: activeAiRoleCard(), userRoleCard: getUserRoleCard() };
         const messages = ycChatPrompt(ycSession, recentYcDialog(24));
         await stream(messages, { temperature: 0.9, model: session.model || undefined, signal: currentAbort?.signal }, (chunk, _full, thought) => {
           if (thought) {
@@ -1203,6 +1321,7 @@
           streaming: false,
           thinking: reasoning.trim() || (isProModel() ? '纯语C模式：按上下文直接接话，未调用规划器、JSON 或构建工具。' : null),
         });
+        ensureSessionTitle('ycMessages');
       } catch (e) {
         if (isAbortError(e)) {
           if (bubbleMsg) patchBubble(bubbleMsg.id, full || '已停止输出', { streaming: false, thinking: reasoning.trim() || null });
@@ -1637,14 +1756,33 @@
       toast(session.ycMode ? '已 开 启 角 色 扮 演' : '已 回 到 Agent 构 建', 'success');
     });
     $roleCardBtn.addEventListener('click', openRoleCardModal);
-    $roleCardPicker.addEventListener('click', (e) => {
+    $roleCardPicker.addEventListener('click', async (e) => {
       const item = e.target.closest('.role-select-item');
       if (!item || !session) return;
+      if (busy) {
+        closeRoleCardModal();
+        toast('请先停止当前输出，再切换角色', 'error');
+        return;
+      }
       const id = item.dataset.id || '';
+      const currentId = session.roleCardId || '';
+      if (id === currentId) {
+        closeRoleCardModal();
+        return;
+      }
       const card = id ? getAiRoleCard(id) : null;
+      const nextCard = normalizeRoleCard(card || {});
+      const nextName = id ? (roleCardDisplayName(nextCard) || 'AI 角色') : '未设置角色';
+      const ok = await confirmRoleConversationReset(nextName);
+      if (!ok) return;
+      clearYcConversationForRoleSwitch();
       session.roleCardId = id || null;
-      session.roleCard = normalizeRoleCard(card || {});
-      updateAgentSession(sessionId, { roleCardId: session.roleCardId, roleCard: session.roleCard });
+      session.roleCard = nextCard;
+      updateAgentSession(sessionId, {
+        roleCardId: session.roleCardId,
+        roleCard: session.roleCard,
+        ycMessages: session.ycMessages,
+      });
       refreshRoleButtonLabel();
       renderRoleCardPicker();
       replayYc();
@@ -1654,11 +1792,23 @@
     });
     $roleCardClose.addEventListener('click', closeRoleCardModal);
     $roleCardModal.querySelector('.role-card-mask').addEventListener('click', closeRoleCardModal);
-    $roleCardClear.addEventListener('click', () => {
+    $roleCardClear.addEventListener('click', async () => {
       if (!session) return;
+      if (busy) {
+        closeRoleCardModal();
+        toast('请先停止当前输出，再取消角色', 'error');
+        return;
+      }
+      if (!(session.roleCardId || hasYcConversation())) {
+        closeRoleCardModal();
+        return;
+      }
+      const ok = await confirmRoleConversationReset('未设置角色');
+      if (!ok) return;
+      clearYcConversationForRoleSwitch();
       session.roleCardId = null;
       session.roleCard = normalizeRoleCard({});
-      updateAgentSession(sessionId, { roleCardId: null, roleCard: session.roleCard });
+      updateAgentSession(sessionId, { roleCardId: null, roleCard: session.roleCard, ycMessages: session.ycMessages });
       refreshRoleButtonLabel();
       renderRoleCardPicker();
       replayYc();
