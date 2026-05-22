@@ -108,7 +108,7 @@ jobs:
           EOF
 
       - name: Add Android platform
-        run: npx cordova platform add android@latest
+        run: npx cordova platform add android@13.0.0
 
       - name: Build release APK
         run: npx cordova build android --release --buildConfig=build.android.json

@@ -9,7 +9,7 @@
     "build": "vite build",
     "build:web": "vite build",
     "preview": "vite preview",
-    "prepare:android": "cordova platform add android@latest --save",
+    "prepare:android": "cordova platform add android@13.0.0 --save",
     "build:android": "cordova build android",
     "build:apk": "cordova build android --release",
     "build:debug": "cordova build android --debug",

@@ -29,6 +29,8 @@ base64 -i release.keystore | pbcopy
 
 配置后，推送 `v*` tag 时会额外上传 `wenshu-android-<version>.apk`。
 
+Android 平台版本固定为 `cordova-android@13.0.0`，不要在 CI 里使用 `android@latest`，否则可能拉到需要更新 Android SDK 常量的预发行/新版本平台，导致 `BAKLAVA`、`VANILLA_ICE_CREAM` 等编译符号找不到。
+
 ## 版本规则
 
 发版前保持这些位置一致：
