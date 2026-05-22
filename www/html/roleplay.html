@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>墨小 · Agent</title>
+<title>角色扮演 · 文舒</title>
 <link rel="stylesheet" href="../css/tokens.css">
 <link rel="stylesheet" href="../css/app.css">
 <script type="module" src="../js/boot.js"></script>
@@ -30,21 +30,15 @@
     <header class="chat-header">
       <div class="chat-topbar">
         <span class="chat-corner-slot" aria-hidden="true"></span>
-        <h1>墨 小 · Agent</h1>
+        <h1>角 色 扮 演</h1>
         <span class="chat-corner-slot" aria-hidden="true"></span>
       </div>
-      <p class="chat-stage" id="chat-stage">说话就行 · 我会陪你把小说一点点捋出来</p>
+      <p class="chat-stage" id="chat-stage">纯语C · 不规划，不弹卡，只接戏</p>
       <div class="chat-modebar">
-        <button id="promote-btn" class="chat-promote" disabled title="把当前 Agent 工坊的成果复制成一本正式小说，进书房">采 用 入 库</button>
         <button id="role-card-btn" class="role-card-open mask-switch" type="button" hidden>
           <img class="mask-icon" src="../assets/icons8-mask.svg" alt="">
           <span id="role-card-btn-label">未设置角色</span>
         </button>
-        <label class="yc-switch" aria-label="切换纯语C模式">
-          <span>角色扮演</span>
-          <input id="yc-mode-btn" type="checkbox">
-          <i aria-hidden="true"></i>
-        </label>
       </div>
     </header>
     <section class="chat-stream" id="stream"></section>
@@ -107,16 +101,16 @@
 
   <section class="chat-launch" id="chat-launch">
     <div class="launch-hero">
-      <h1>墨 小 · Agent</h1>
-      <p>说话就行 · 我陪你把小说一点点捋出来</p>
+      <h1>角 色 扮 演</h1>
+      <p>纯语C · 戴上面具，直接开场接戏</p>
     </div>
     <div class="launch-actions">
-      <button class="btn-primary" id="launch-new" type="button">+ 开 始 新 会 话</button>
-      <button class="btn-quiet" id="launch-open-drawer" type="button">查 看 历 史 会 话</button>
+      <button class="btn-primary" id="launch-new" type="button">+ 开 始 角 色 扮 演</button>
+      <button class="btn-quiet" id="launch-open-drawer" type="button">查 看 角 色 会 话</button>
       <a class="btn-quiet" href="index.html">回 文 舒 首 页</a>
     </div>
     <div class="launch-recent" id="launch-recent" hidden>
-      <h3>最 近 会 话</h3>
+      <h3>最 近 角 色 会 话</h3>
       <ul id="launch-recent-list"></ul>
     </div>
   </section>
@@ -154,7 +148,7 @@
     import {
       getAgentSession, createAgentSession, updateAgentSession,
       upsertAgentChapter, appendAgentMessage, patchAgentMessage,
-      setAgentMicro, flushAgent, promoteAgentSession,
+      setAgentMicro, flushAgent,
       listAgentSessions, deleteAgentSession,
       listAiRoleCards, getAiRoleCard, getUserRoleCard,
     } from '../js/store.js';
@@ -165,6 +159,7 @@
     import {
       titlesPrompt, loglinePrompt, outlinePrompt, charactersPrompt,
       microPrompt, chapterPrompt, summaryPrompt, ycChatPrompt, agentPlannerPrompt,
+      sessionTitlePrompt,
     } from '../js/prompts.js';
     import { STYLE_CARDS } from '../js/styles.js';
     import {
@@ -176,6 +171,7 @@
       { id: 'deepseek-v4-flash', label: 'Flash', desc: '快 · 适合 Agent 对话' },
       { id: 'deepseek-v4-pro',   label: 'Pro',   desc: '慢 · 章节正文用' },
     ];
+    const PAGE_MODE = 'roleplay';
 
     bindGlobalTapVibration();
 
@@ -184,7 +180,18 @@
     // 无 session 时进入"启动屏"模式（见 §chat-launch），等用户手动操作。
     let sessionId = urlParam('session');
     let session = sessionId ? getAgentSession(sessionId) : null;
+    let redirecting = false;
     if (!sessionId || !session) sessionId = null;
+    if (session && session.mode === 'writer') {
+      redirecting = true;
+      location.replace(`agent.html?session=${encodeURIComponent(sessionId)}`);
+      session = null;
+      sessionId = null;
+    }
+    if (session && sessionId) {
+      session.mode = 'roleplay';
+      session.ycMode = true;
+    }
     // novel 是 session 的别名；无 session 时为 null，依赖它的代码都在 if (session) 守卫后跑
     const novel = session;
 
@@ -198,7 +205,6 @@
     const $scrollBottomBtn = $('#scroll-bottom-btn');
     const $attachBtn = $('#attach-file-btn');
     const $attachInput = $('#attach-file-input');
-    const $promote = $('#promote-btn');
     const $hamburger = $('#open-drawer');
     const $drawer = $('#session-drawer');
     const $sdList = $('#sd-list');
@@ -245,32 +251,11 @@
       { label: '♡',            insert: '{情绪加深：}' },
     ];
 
-    // ===== 「采用入库」：把当前 Agent 沙盒成果复制成一本正式 novel =====
-    // 启用条件：有 logline + 有大纲 + 至少一章正文 —— 否则入库进去是个空壳，不值
+    let sessionTitleRunSeq = 0;
+
     function refreshPromote() {
-      if (session?.ycMode) {
-        $promote.disabled = true;
-        return;
-      }
-      const ok = !!(novel.spec?.logline)
-        && Array.isArray(novel.outline) && novel.outline.length > 0
-        && (novel.chapters || []).some((c) => c.body && c.body.trim());
-      $promote.disabled = !ok;
+      // 角色扮演页不提供写文工坊入库。
     }
-    $promote.addEventListener('click', async () => {
-      if ($promote.disabled || busy) return;
-      const ok = await confirmDialog(
-        '把当前工坊里的标题、大纲、人物、已写章节，复制成一本正式小说并进入书房？<br><br>原 Agent 会话保留，可继续聊、再次入库会建新的一本。',
-        { okLabel: '入 库', cancelLabel: '再 想 想' }
-      );
-      if (!ok) return;
-      flushAgent();
-      const created = promoteAgentSession(sessionId);
-      if (!created) { toast('入库失败：没找到会话', 'error'); vibrate('warn'); return; }
-      vibrate('done');
-      toast('已入库《' + created.title + '》', 'success');
-      setTimeout(() => { location.href = 'library.html'; }, 600);
-    });
 
     // ===== 全局 busy 控制（思考中、生成中）=====
     let busy = false;
@@ -319,8 +304,8 @@
       $scrollBottomBtn.hidden = !show;
       $scrollBottomBtn.classList.toggle('show', show);
     }
-    function scrollToBottom() {
-      if (!autoStickBottom && distanceFromBottom() > 120) {
+    function scrollToBottom({ force = false } = {}) {
+      if (!force && !autoStickBottom && distanceFromBottom() > 120) {
         refreshScrollBottomButton();
         return;
       }
@@ -329,6 +314,9 @@
         autoStickBottom = true;
         refreshScrollBottomButton();
       });
+    }
+    function followStreamingOutput() {
+      scrollToBottom();
     }
     function updateInputDockMetrics() {
       if (!$chatInputPanel) return;
@@ -354,11 +342,33 @@
       const el = document.createElement('div');
       el.className = 'bubble ' + (msg.role === 'user' ? 'user' : 'ai');
       const hasContent = !!String(msg.content || '').trim();
-      el.innerHTML = hasContent ? renderMd(msg.content || '') : renderLoadingDOM(msg);
+      renderBubbleContent(el, {
+        role: msg.role,
+        content: msg.content || '',
+        streaming: !!msg.streaming,
+        thinking: msg.thinking || null,
+        thinkingOpen: false,
+      });
       if (msg.role === 'ai' && msg.streaming && !hasContent) el.classList.add('awaiting-content');
-      if (msg.streaming) el.classList.add('streaming-caret');
-      if (msg.thinking) el.prepend(renderThinkingDOM(msg.thinking));
       return el;
+    }
+
+    function renderAvatarInto(el, card, fallback) {
+      const avatar = card?.avatarDataUrl;
+      if (avatar) {
+        const img = document.createElement('img');
+        img.src = avatar;
+        img.alt = '';
+        el.textContent = '';
+        el.appendChild(img);
+        return;
+      }
+      el.textContent = roleCardInitial(card, fallback);
+    }
+
+    function activeAiRoleCard() {
+      const current = session?.roleCardId ? getAiRoleCard(session.roleCardId) : null;
+      return normalizeRoleCard(current || session?.roleCard || {});
     }
 
     function renderYcBubbleDOM(msg) {
@@ -366,30 +376,47 @@
       wrap.className = 'yc-line ' + (msg.role === 'user' ? 'user' : 'ai');
       const avatar = document.createElement('div');
       avatar.className = 'yc-avatar';
-      avatar.textContent = msg.role === 'user'
-        ? roleCardInitial(getUserRoleCard(), '我')
-        : roleCardInitial(session?.roleCard, '墨');
+      if (msg.role === 'user') renderAvatarInto(avatar, getUserRoleCard(), '我');
+      else renderAvatarInto(avatar, activeAiRoleCard(), '墨');
       const bubble = document.createElement('div');
       bubble.className = 'bubble ' + (msg.role === 'user' ? 'user' : 'ai');
       const hasContent = !!String(msg.content || '').trim();
-      bubble.innerHTML = hasContent ? renderMd(msg.content || '') : renderLoadingDOM(msg);
+      renderBubbleContent(bubble, {
+        role: msg.role,
+        content: msg.content || '',
+        streaming: !!msg.streaming,
+        thinking: msg.thinking || null,
+        thinkingOpen: ycThinkingOpen,
+      });
       if (msg.role === 'ai' && msg.streaming && !hasContent) bubble.classList.add('awaiting-content');
-      if (msg.streaming) bubble.classList.add('streaming-caret');
-      if (msg.thinking) bubble.prepend(renderThinkingDOM(msg.thinking));
       if (msg.role === 'user') { wrap.appendChild(bubble); wrap.appendChild(avatar); }
       else { wrap.appendChild(avatar); wrap.appendChild(bubble); }
       return wrap;
     }
 
+    function renderBubbleContent(bubble, { role, content = '', streaming = false, thinking = null, thinkingOpen = false } = {}) {
+      const hasContent = !!String(content || '').trim();
+      const visibleThinking = thinking || null;
+      bubble.innerHTML = '';
+      if (visibleThinking) bubble.appendChild(renderThinkingDOM(visibleThinking, thinkingOpen, false));
+      const body = document.createElement('div');
+      body.className = 'message-body';
+      body.innerHTML = hasContent ? renderMd(content || '') : renderLoadingDOM({ role, streaming });
+      body.classList.toggle('streaming-caret', streaming && hasContent);
+      body.classList.toggle('has-md-content', streaming && hasContent);
+      bubble.appendChild(body);
+    }
+
     function renderLoadingDOM(msg) {
       return msg.role === 'ai' && msg.streaming
-        ? '<span class="message-loading" aria-label="正在生成"></span>'
+        ? '<span class="message-loading-wrap" aria-label="思考中，正在生成"><span class="message-loading-text">思考中</span><span class="message-loading" aria-hidden="true" data-loading="1"></span></span>'
         : '';
     }
 
-    function renderThinkingDOM(text, open = false) {
+    function renderThinkingDOM(text, open = false, placeholder = false) {
       const details = document.createElement('details');
       details.className = 'thinking-fold';
+      if (placeholder) details.classList.add('is-placeholder');
       details.open = isYcMode() ? ycThinkingOpen : !!open;
       details.addEventListener('toggle', () => {
         if (syncingThinkingFolds) return;
@@ -439,22 +466,56 @@
       const el = $stream.querySelector(`[data-msg-id="${msgId}"]`);
       if (!el) return;
       const bubble = el.classList.contains('yc-line') ? el.querySelector('.bubble') : el;
-      const existingThinking = thinking === null ? bubble.querySelector('.thinking-body')?.textContent : null;
-      const thinkingWasOpen = isYcMode() ? ycThinkingOpen : !!bubble.querySelector('.thinking-fold')?.open;
+      let body = bubble.querySelector(':scope > .message-body');
+      if (!body) {
+        body = document.createElement('div');
+        body.className = 'message-body';
+        while (bubble.firstChild) body.appendChild(bubble.firstChild);
+        bubble.appendChild(body);
+      }
+      const thinkingFold = bubble.querySelector(':scope > .thinking-fold');
+      const existingThinking = thinking === null && !thinkingFold?.classList.contains('is-placeholder')
+        ? thinkingFold?.querySelector('.thinking-body')?.textContent
+        : null;
+      const thinkingWasOpen = isYcMode() ? ycThinkingOpen : !!thinkingFold?.open;
       const hasContent = !!String(content || '').trim();
-      bubble.innerHTML = hasContent ? renderMd(content || '') : renderLoadingDOM({ role: 'ai', streaming });
-      bubble.classList.toggle('streaming-caret', streaming && hasContent);
+      if (hasContent) {
+        body.innerHTML = renderMd(content || '');
+      } else if (streaming && !body.querySelector('.message-loading')) {
+        body.innerHTML = renderLoadingDOM({ role: 'ai', streaming });
+      } else if (!streaming) {
+        body.innerHTML = '';
+      }
+      body.classList.toggle('streaming-caret', streaming && hasContent);
+      body.classList.toggle('has-md-content', streaming && hasContent);
       bubble.classList.toggle('awaiting-content', streaming && !hasContent);
       const nextThinking = thinking ?? existingThinking;
-      if (nextThinking) bubble.prepend(renderThinkingDOM(nextThinking, thinkingWasOpen));
+      patchThinkingDOM(bubble, nextThinking || null, thinkingWasOpen, false);
       patchAgentMessage(sessionId, msgId, { content, streaming, ...(nextThinking ? { thinking: nextThinking } : {}) }, isYcMode() ? 'ycMessages' : 'messages');
+    }
+
+    function patchThinkingDOM(bubble, text, open = false, placeholder = false) {
+      const current = bubble.querySelector(':scope > .thinking-fold');
+      if (!text) {
+        if (current) current.remove();
+        return;
+      }
+      if (current) {
+        current.classList.toggle('is-placeholder', !!placeholder);
+        current.open = isYcMode() ? ycThinkingOpen : !!open;
+        const body = current.querySelector('.thinking-body');
+        if (body && body.textContent !== text) body.textContent = text;
+        return;
+      }
+      const body = bubble.querySelector(':scope > .message-body');
+      bubble.insertBefore(renderThinkingDOM(text, open, placeholder), body || bubble.firstChild);
     }
 
     async function pushStreamingBubble(content, { thinking = null } = {}) {
       const text = String(content || '');
       const msg = appendAgentMessage(sessionId, { role: 'ai', kind: 'text', content: '', streaming: true }, isYcMode() ? 'ycMessages' : 'messages');
       renderMessage(msg);
-      scrollToBottom();
+      followStreamingOutput();
       if (!text) {
         patchBubble(msg.id, '', { streaming: false, thinking });
         return msg;
@@ -467,7 +528,7 @@
         }
         shown += text[i];
         patchBubble(msg.id, shown, { streaming: true });
-        scrollToBottom();
+        followStreamingOutput();
         if (i % 3 === 2) await new Promise((resolve) => setTimeout(resolve, 12));
       }
       patchBubble(msg.id, text, { streaming: false, thinking });
@@ -693,16 +754,141 @@
       el.insertBefore(renderThinkingDOM(thinking, thinkingWasOpen), body || null);
     }
 
-    // ===== 极简 markdown =====
+    // ===== 安全 Markdown 渲染（AI 输出先转义，再做有限格式化）=====
     function renderMd(text) {
       if (!text) return '';
-      const lines = String(text).split(/\n+/);
-      return lines.map((l) => {
-        if (l.startsWith('> ')) return `<blockquote>${escapeHtml(l.slice(2))}</blockquote>`;
-        if (l.startsWith('## ')) return `<h3>${escapeHtml(l.slice(3))}</h3>`;
-        if (l.startsWith('- ')) return `<p>· ${escapeHtml(l.slice(2))}</p>`;
-        return `<p>${escapeHtml(l)}</p>`;
-      }).join('');
+      const lines = String(text).replace(/\r\n?/g, '\n').split('\n');
+      const out = [];
+      let i = 0;
+
+      while (i < lines.length) {
+        const line = lines[i];
+        if (!line.trim()) { i++; continue; }
+
+        const fence = line.match(/^```(\w+)?\s*$/);
+        if (fence) {
+          const lang = fence[1] ? ` data-lang="${escapeAttr(fence[1])}"` : '';
+          const code = [];
+          i++;
+          while (i < lines.length && !/^```\s*$/.test(lines[i])) {
+            code.push(lines[i]);
+            i++;
+          }
+          if (i < lines.length) i++;
+          out.push(`<pre${lang}><code>${escapeHtml(code.join('\n'))}</code></pre>`);
+          continue;
+        }
+
+        const heading = line.match(/^(#{1,3})\s+(.+)$/);
+        if (heading) {
+          const level = heading[1].length + 2;
+          out.push(`<h${level}>${renderInlineMd(heading[2].trim())}</h${level}>`);
+          i++;
+          continue;
+        }
+
+        if (/^>\s?/.test(line)) {
+          const quote = [];
+          while (i < lines.length && /^>\s?/.test(lines[i])) {
+            quote.push(lines[i].replace(/^>\s?/, ''));
+            i++;
+          }
+          out.push(`<blockquote>${quote.map((q) => `<p>${renderInlineMd(q)}</p>`).join('')}</blockquote>`);
+          continue;
+        }
+
+        if (/^\s*[-*+]\s+/.test(line)) {
+          const items = [];
+          while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])) {
+            items.push(lines[i].replace(/^\s*[-*+]\s+/, ''));
+            i++;
+          }
+          out.push(`<ul>${items.map((item) => `<li>${renderInlineMd(item)}</li>`).join('')}</ul>`);
+          continue;
+        }
+
+        if (/^\s*\d+[.)]\s+/.test(line)) {
+          const items = [];
+          while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) {
+            items.push(lines[i].replace(/^\s*\d+[.)]\s+/, ''));
+            i++;
+          }
+          out.push(`<ol>${items.map((item) => `<li>${renderInlineMd(item)}</li>`).join('')}</ol>`);
+          continue;
+        }
+
+        const table = readTable(lines, i);
+        if (table) {
+          out.push(renderTableMd(table.rows));
+          i = table.next;
+          continue;
+        }
+
+        const para = [];
+        while (i < lines.length && lines[i].trim() && !isMdBlockStart(lines[i])) {
+          para.push(lines[i].trim());
+          i++;
+        }
+        out.push(`<p>${renderInlineMd(para.join(' '))}</p>`);
+      }
+
+      return `<div class="md-content">${out.join('')}</div>`;
+    }
+
+    function isMdBlockStart(line) {
+      return /^```/.test(line)
+        || /^(#{1,3})\s+/.test(line)
+        || /^>\s?/.test(line)
+        || /^\s*[-*+]\s+/.test(line)
+        || /^\s*\d+[.)]\s+/.test(line)
+        || isTableHeader(line);
+    }
+
+    function isTableHeader(line) {
+      return line.includes('|');
+    }
+
+    function readTable(lines, start) {
+      if (start + 1 >= lines.length || !isTableHeader(lines[start])) return null;
+      if (!/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(lines[start + 1])) return null;
+      const rows = [splitTableRow(lines[start])];
+      let i = start + 2;
+      while (i < lines.length && lines[i].includes('|') && lines[i].trim()) {
+        rows.push(splitTableRow(lines[i]));
+        i++;
+      }
+      return { rows, next: i };
+    }
+
+    function splitTableRow(line) {
+      return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim());
+    }
+
+    function renderTableMd(rows) {
+      const head = rows[0] || [];
+      const body = rows.slice(1);
+      return `<table><thead><tr>${head.map((cell) => `<th>${renderInlineMd(cell)}</th>`).join('')}</tr></thead><tbody>${body.map((row) => `<tr>${head.map((_, idx) => `<td>${renderInlineMd(row[idx] || '')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    }
+
+    function renderInlineMd(text) {
+      let s = escapeHtml(text);
+      s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+      s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+      s = s.replace(/(^|[^\*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+      s = s.replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>');
+      s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, label, url) => {
+        const safeUrl = sanitizeMdUrl(url);
+        return safeUrl ? `<a href="${escapeAttr(safeUrl)}" target="_blank" rel="noopener">${label}</a>` : label;
+      });
+      return s;
+    }
+
+    function sanitizeMdUrl(url) {
+      const raw = String(url || '').trim();
+      if (/^(https?:|mailto:|tel:)/i.test(raw)) return raw;
+      if (/^[./#]/.test(raw)) return raw;
+      return '';
     }
     function escapeHtml(s) { return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
     function escapeAttr(s) {
@@ -788,6 +974,67 @@
         .map((m) => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content || '' }));
     }
 
+    function hasRealSessionTitle() {
+      return !!(session?.title && session.title !== '未命名 · Agent');
+    }
+
+    function fallbackShortTitle(text) {
+      const clean = String(text || '')
+        .replace(/\[[^\]]+\]/g, '')
+        .replace(/[{}#*_`>~｜|]+/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (!clean) return '';
+      return clean.length > 14 ? clean.slice(0, 14) : clean;
+    }
+
+    async function ensureSessionTitle(lane = isYcMode() ? 'ycMessages' : 'messages') {
+      if (!session || hasRealSessionTitle() || session.titleGenerating) return;
+      const list = Array.isArray(session[lane]) ? session[lane] : [];
+      const textMessages = list.filter((m) => m.kind === 'text' && !m.streaming && String(m.content || '').trim());
+      const hasUser = textMessages.some((m) => m.role === 'user');
+      const hasAi = textMessages.some((m) => m.role === 'ai');
+      if (!hasUser || !hasAi) return;
+      session.titleGenerating = true;
+      const runSeq = ++sessionTitleRunSeq;
+      updateAgentSession(sessionId, { titleGenerating: true });
+      const fallback = fallbackShortTitle(textMessages.find((m) => m.role === 'user')?.content);
+      try {
+        const dialog = textMessages.slice(0, 8).map((m) => ({
+          role: m.role === 'ai' ? 'assistant' : 'user',
+          content: m.content || '',
+        }));
+        const raw = await chat(sessionTitlePrompt(dialog, {
+          mode: lane === 'ycMessages' ? 'yc' : 'agent',
+          roleName: lane === 'ycMessages' ? currentAiRoleName() : '',
+        }), {
+          jsonMode: true,
+          temperature: 0.25,
+          model: 'deepseek-v4-flash',
+        });
+        const parsed = parseJson(raw);
+        if (runSeq !== sessionTitleRunSeq) return;
+        const title = String(parsed?.title || '').replace(/[《》「」"“”'.,，。！？!?：:；;、]/g, '').trim();
+        const nextTitle = (title && title.length <= 16 ? title : title.slice(0, 16)) || fallback;
+        if (nextTitle) {
+          session.title = nextTitle;
+          updateAgentSession(sessionId, { title: nextTitle, titleGenerating: false });
+          renderSessionList();
+          return;
+        }
+      } catch {
+        if (runSeq !== sessionTitleRunSeq) return;
+        if (fallback) {
+          session.title = fallback;
+          updateAgentSession(sessionId, { title: fallback, titleGenerating: false });
+          renderSessionList();
+          return;
+        }
+      }
+      session.titleGenerating = false;
+      updateAgentSession(sessionId, { titleGenerating: false });
+    }
+
     function firstRoleCardOpening(card) {
       const c = normalizeRoleCard(card || {});
       return (c.openingDialogues || []).find((d) => d.role === 'ai' && String(d.content || '').trim())?.content?.trim() || '';
@@ -801,6 +1048,32 @@
       const msg = appendAgentMessage(sessionId, { role: 'ai', kind: 'text', content: opening }, 'ycMessages');
       renderMessage(msg);
       scrollToBottom();
+    }
+
+    function hasYcConversation() {
+      return Array.isArray(session?.ycMessages)
+        && session.ycMessages.some((m) => m.kind === 'text' && String(m.content || '').trim());
+    }
+
+    async function confirmRoleConversationReset(nextName) {
+      if (!hasYcConversation()) return true;
+      return await confirmDialog(
+        `切换到「${escapeHtml(nextName || '未设置角色')}」会清空当前角色扮演对话。<br><br>这样可以避免上一张角色卡的提示词和上下文串到新对话里。`,
+        { okLabel: '清 空 并 切 换', cancelLabel: '取 消' }
+      );
+    }
+
+    function clearYcConversationForRoleSwitch() {
+      if (!session) return;
+      sessionTitleRunSeq++;
+      session.ycMessages = [];
+      if (session.titleGenerating) session.titleGenerating = false;
+      const patch = { ycMessages: [], titleGenerating: false };
+      if (session.title && !((session.ycMessages || []).some((m) => m.kind === 'text' && String(m.content || '').trim()))) {
+        session.title = null;
+        patch.title = null;
+      }
+      updateAgentSession(sessionId, patch);
     }
 
     // ===== 调用规划器 =====
@@ -828,31 +1101,23 @@
     }
 
     function isYcMode() {
-      return !!(session && session.ycMode);
+      return true;
     }
 
     function refreshModeToggle() {
-      if (!$ycModeBtn) return;
-      const on = isYcMode();
-      $ycModeBtn.checked = on;
-      if ($roleCardBtn) $roleCardBtn.hidden = !on;
+      if ($roleCardBtn) $roleCardBtn.hidden = false;
       refreshRoleButtonLabel();
-      $input.placeholder = on
-        ? '纯语C中…直接接话，不走规划器'
-        : '想说点什么…（Enter 发送，Shift+Enter 换行）';
+      $input.placeholder = '纯语C中…直接接话，不走规划器';
       refreshPromote();
       const stage = $('#chat-stage');
-      if (stage) stage.textContent = on
-        ? '纯语C · 不规划，不弹卡，只接戏'
-        : '说话就行 · 我会陪你把小说一点点捋出来';
+      if (stage) stage.textContent = '纯语C · 不规划，不弹卡，只接戏';
       if (session) {
-        if (on) replayYc();
-        else replay();
+        replayYc();
       }
     }
 
     function currentAiRoleName() {
-      return roleCardDisplayName(session?.roleCard) || '';
+      return roleCardDisplayName(activeAiRoleCard()) || '';
     }
 
     function refreshRoleButtonLabel() {
@@ -886,6 +1151,10 @@
 
     function openRoleCardModal() {
       if (!session) return;
+      if (busy) {
+        toast('请先停止当前输出，再切换角色', 'error');
+        return;
+      }
       renderRoleCardPicker();
       $roleCardModal.hidden = false;
       $roleCardModal.setAttribute('aria-hidden', 'false');
@@ -1150,6 +1419,7 @@
           }
           if (plan.patch) applyPatch(plan.patch);
           if (plan.say) await pushStreamingBubble(plan.say, { thinking: isProModel() ? planThinkingSummary(plan) : null });
+          ensureSessionTitle('messages');
           if (stopRequested) break;
           let pushedQ = false;
           if (plan.qcard && plan.qcard.type) {
@@ -1177,7 +1447,7 @@
       try {
         const userMsg = appendAgentMessage(sessionId, { role: 'user', kind: 'text', content: userText }, 'ycMessages');
         renderMessage(userMsg);
-        scrollToBottom();
+        scrollToBottom({ force: true });
         bubbleMsg = appendAgentMessage(sessionId, {
           role: 'ai',
           kind: 'text',
@@ -1185,9 +1455,9 @@
           streaming: true,
         }, 'ycMessages');
         renderMessage(bubbleMsg);
-        scrollToBottom();
+        scrollToBottom({ force: true });
 
-        const ycSession = { ...session, userRoleCard: getUserRoleCard() };
+        const ycSession = { ...session, roleCard: activeAiRoleCard(), userRoleCard: getUserRoleCard() };
         const messages = ycChatPrompt(ycSession, recentYcDialog(24));
         await stream(messages, { temperature: 0.9, model: session.model || undefined, signal: currentAbort?.signal }, (chunk, _full, thought) => {
           if (thought) {
@@ -1197,12 +1467,13 @@
           }
           full += chunk;
           patchBubble(bubbleMsg.id, full, { streaming: true });
-          scrollToBottom();
+          followStreamingOutput();
         });
         patchBubble(bubbleMsg.id, full, {
           streaming: false,
           thinking: reasoning.trim() || (isProModel() ? '纯语C模式：按上下文直接接话，未调用规划器、JSON 或构建工具。' : null),
         });
+        ensureSessionTitle('ycMessages');
       } catch (e) {
         if (isAbortError(e)) {
           if (bubbleMsg) patchBubble(bubbleMsg.id, full || '已停止输出', { streaming: false, thinking: reasoning.trim() || null });
@@ -1249,6 +1520,8 @@
       if (busy) { stopCurrentOutput(); return; }
       const text = $input.value.trim();
       if (!text) return;
+      autoStickBottom = true;
+      scrollToBottom({ force: true });
       $input.value = '';
       autoresize();
       if (isYcMode()) runYcTurn(text);
@@ -1436,27 +1709,27 @@
     }
     function sessionTitleOf(s) {
       if (s.title && s.title !== '未命名 · Agent') return s.title;
-      const firstUser = (s.messages || []).find((m) => m.role === 'user' && m.kind === 'text');
+      const firstUser = (s.ycMessages || []).find((m) => m.role === 'user' && m.kind === 'text');
       if (firstUser?.content) {
         const t = firstUser.content.trim();
         return t.length > 20 ? t.slice(0, 20) + '…' : t;
       }
       const d = new Date(s.createdAt || Date.now());
       const pad = (n) => String(n).padStart(2, '0');
-      return `新会话 · ${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      return `新角色会话 · ${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
     function renderSessionList() {
-      const all = listAgentSessions();
+      const all = listAgentSessions(PAGE_MODE);
       $sdList.innerHTML = all.map((s) => `
         <li class="sd-item ${s.id === sessionId ? 'current' : ''}" data-id="${s.id}">
           <div class="sd-row">
             <div class="sd-title">${escapeHtml(sessionTitleOf(s))}</div>
             <button class="sd-more" data-id="${s.id}" type="button" aria-label="更多">⋯</button>
           </div>
-          <div class="sd-meta">${formatRelTime(s.updatedAt)} · ${(s.chapters || []).length} 章</div>
+          <div class="sd-meta">${formatRelTime(s.updatedAt)} · ${(s.ycMessages || []).filter((m) => m.kind === 'text').length} 条消息</div>
         </li>`).join('');
       if (!all.length) {
-        $sdList.innerHTML = `<li class="sd-empty">还没有会话</li>`;
+        $sdList.innerHTML = `<li class="sd-empty">还没有角色会话</li>`;
       }
     }
     function openDrawer() {
@@ -1507,15 +1780,15 @@
       mask.querySelector('.sd-delete').onclick = async () => {
         close();
         const ok = await confirmDialog(
-          `删除「${escapeHtml(sessionTitleOf(s))}」？<br><br>这条会话的所有消息、大纲、已生成章节都会一起清除，无法恢复。`,
+          `删除「${escapeHtml(sessionTitleOf(s))}」？<br><br>这条角色扮演会话的所有消息都会清除，无法恢复。`,
           { okLabel: '删 除', cancelLabel: '再 想 想' }
         );
         if (!ok) return;
         deleteAgentSession(id);
         vibrate('warn');
         if (id === sessionId) {
-          // 删的是当前会话——直接跳回首页
-          location.href = 'index.html';
+          // 删的是当前会话——回到角色扮演入口
+          location.href = 'roleplay.html';
           return;
         }
         toast('已 删 除', 'success');
@@ -1530,8 +1803,8 @@
     $drawer.querySelector('.sd-mask').addEventListener('click', closeDrawer);
     $sdNew.addEventListener('click', () => {
       flushAgent();
-      const s = createAgentSession();
-      location.href = `agent.html?session=${s.id}`;
+      const s = createAgentSession({ mode: PAGE_MODE });
+      location.href = `roleplay.html?session=${s.id}`;
     });
     $sdList.addEventListener('click', (e) => {
       const more = e.target.closest('.sd-more');
@@ -1545,19 +1818,19 @@
       const id = li.dataset.id;
       if (!id || id === sessionId) { closeDrawer(); return; }
       flushAgent();
-      location.href = `agent.html?session=${id}`;
+      location.href = `roleplay.html?session=${id}`;
     });
 
     // ===== 启动屏（无 ?session= 时显示，不调模型不建 session）=====
     function renderLaunchScreen() {
       $chatScreen.hidden = true;
       $chatLaunch.hidden = false;
-      const recent = listAgentSessions().slice(0, 5);
+      const recent = listAgentSessions(PAGE_MODE).slice(0, 5);
       if (recent.length) {
         $launchRecent.hidden = false;
         $launchRecentList.innerHTML = recent.map((s) => `
           <li>
-            <a href="agent.html?session=${s.id}">${escapeHtml(sessionTitleOf(s))}</a>
+            <a href="roleplay.html?session=${s.id}">${escapeHtml(sessionTitleOf(s))}</a>
             <span class="meta">${formatRelTime(s.updatedAt)}</span>
           </li>`).join('');
       } else {
@@ -1565,9 +1838,9 @@
       }
     }
     $launchNew.addEventListener('click', () => {
-      const s = createAgentSession();
+      const s = createAgentSession({ mode: PAGE_MODE });
       vibrate('ok');
-      location.href = `agent.html?session=${s.id}`;
+      location.href = `roleplay.html?session=${s.id}`;
     });
     $launchDrawer.addEventListener('click', openDrawer);
 
@@ -1628,23 +1901,37 @@
       session.styleId = id;
       refreshToolLabels();
     });
-    $ycModeBtn.addEventListener('change', () => {
-      if (!session || busy) return;
-      session.ycMode = $ycModeBtn.checked;
-      updateAgentSession(sessionId, { ycMode: session.ycMode });
-      refreshModeToggle();
-      vibrate('tap');
-      toast(session.ycMode ? '已 开 启 角 色 扮 演' : '已 回 到 Agent 构 建', 'success');
+    $ycModeBtn?.addEventListener('change', () => {
+      $ycModeBtn.checked = true;
     });
     $roleCardBtn.addEventListener('click', openRoleCardModal);
-    $roleCardPicker.addEventListener('click', (e) => {
+    $roleCardPicker.addEventListener('click', async (e) => {
       const item = e.target.closest('.role-select-item');
       if (!item || !session) return;
+      if (busy) {
+        closeRoleCardModal();
+        toast('请先停止当前输出，再切换角色', 'error');
+        return;
+      }
       const id = item.dataset.id || '';
+      const currentId = session.roleCardId || '';
+      if (id === currentId) {
+        closeRoleCardModal();
+        return;
+      }
       const card = id ? getAiRoleCard(id) : null;
+      const nextCard = normalizeRoleCard(card || {});
+      const nextName = id ? (roleCardDisplayName(nextCard) || 'AI 角色') : '未设置角色';
+      const ok = await confirmRoleConversationReset(nextName);
+      if (!ok) return;
+      clearYcConversationForRoleSwitch();
       session.roleCardId = id || null;
-      session.roleCard = normalizeRoleCard(card || {});
-      updateAgentSession(sessionId, { roleCardId: session.roleCardId, roleCard: session.roleCard });
+      session.roleCard = nextCard;
+      updateAgentSession(sessionId, {
+        roleCardId: session.roleCardId,
+        roleCard: session.roleCard,
+        ycMessages: session.ycMessages,
+      });
       refreshRoleButtonLabel();
       renderRoleCardPicker();
       replayYc();
@@ -1654,11 +1941,23 @@
     });
     $roleCardClose.addEventListener('click', closeRoleCardModal);
     $roleCardModal.querySelector('.role-card-mask').addEventListener('click', closeRoleCardModal);
-    $roleCardClear.addEventListener('click', () => {
+    $roleCardClear.addEventListener('click', async () => {
       if (!session) return;
+      if (busy) {
+        closeRoleCardModal();
+        toast('请先停止当前输出，再取消角色', 'error');
+        return;
+      }
+      if (!(session.roleCardId || hasYcConversation())) {
+        closeRoleCardModal();
+        return;
+      }
+      const ok = await confirmRoleConversationReset('未设置角色');
+      if (!ok) return;
+      clearYcConversationForRoleSwitch();
       session.roleCardId = null;
       session.roleCard = normalizeRoleCard({});
-      updateAgentSession(sessionId, { roleCardId: null, roleCard: session.roleCard });
+      updateAgentSession(sessionId, { roleCardId: null, roleCard: session.roleCard, ycMessages: session.ycMessages });
       refreshRoleButtonLabel();
       renderRoleCardPicker();
       replayYc();
@@ -1691,7 +1990,10 @@
     });
 
     // ===== 启动 =====
-    if (session) {
+    if (redirecting) {
+      // 等待 location.replace，避免错误入口短暂渲染启动屏。
+    } else if (session) {
+      updateAgentSession(sessionId, { mode: PAGE_MODE, ycMode: true });
       $chatLaunch.hidden = true;
       $chatScreen.hidden = false;
       refreshToolLabels();
@@ -1699,13 +2001,7 @@
       autoresize();
       updateInputDockMetrics();
       refreshPromote();
-      // 空 session 给个引导卡，不调模型（用户原话「不能够默认调用模型」）
-      if (!session.messages.length && !session.ycMode) {
-        const hint = document.createElement('div');
-        hint.className = 'empty-hint';
-        hint.innerHTML = `说说想写什么——题材、人物、场景，或者干脆一句话灵感都行。<br>也可以点左下 <b>{}</b> 快捷短语，或左上汉堡换个会话。`;
-        $stream.appendChild(hint);
-      }
+      applyRoleCardOpening(session.roleCard);
     } else {
       // 启动屏模式：什么都不调
       renderLaunchScreen();

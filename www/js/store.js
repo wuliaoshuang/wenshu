@@ -51,7 +51,7 @@ function load() {
     if (!raw) return structuredClone(DEFAULT_STATE);
     const parsed = JSON.parse(raw);
     const merged = mergeDeep(structuredClone(DEFAULT_STATE), parsed);
-    return hydrateRoleCards(migrateIfNeeded(merged));
+    return hydrateRoleCards(migrateAgentSessionModes(migrateIfNeeded(merged)));
   } catch {
     return hydrateRoleCards(structuredClone(DEFAULT_STATE));
   }
@@ -87,6 +87,38 @@ function migrateIfNeeded(s) {
   }
   s.schemaVersion = 2;
   try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {}
+  return s;
+}
+
+function inferAgentSessionMode(session = {}) {
+  if (session.mode === 'writer' || session.mode === 'roleplay') return session.mode;
+  const hasRoleplayMessages = Array.isArray(session.ycMessages)
+    && session.ycMessages.some((m) => m && String(m.content || '').trim());
+  return session.ycMode || hasRoleplayMessages ? 'roleplay' : 'writer';
+}
+
+function normalizeAgentSessionMode(session = {}) {
+  const mode = inferAgentSessionMode(session);
+  return {
+    ...session,
+    mode,
+    ycMode: mode === 'roleplay',
+    messages: Array.isArray(session.messages) ? session.messages : [],
+    ycMessages: Array.isArray(session.ycMessages) ? session.ycMessages : [],
+  };
+}
+
+function migrateAgentSessionModes(s) {
+  let changed = false;
+  s.agentSessions = s.agentSessions || {};
+  for (const [id, session] of Object.entries(s.agentSessions)) {
+    const next = normalizeAgentSessionMode(session || {});
+    if (next.mode !== session?.mode || next.ycMode !== session?.ycMode) changed = true;
+    s.agentSessions[id] = next;
+  }
+  if (changed) {
+    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {}
+  }
   return s;
 }
 
@@ -273,14 +305,22 @@ function persistAgentSoon() {
   _agentPersistTimer = setTimeout(() => persist(), 200);
 }
 
-export function listAgentSessions() {
-  return Object.values(state.agentSessions).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+export function listAgentSessions(mode = null) {
+  const sessions = Object.values(state.agentSessions).map(normalizeAgentSessionMode);
+  const filtered = mode ? sessions.filter((s) => s.mode === mode) : sessions;
+  return filtered.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
 }
-export function getAgentSession(id) { return state.agentSessions[id]; }
+export function getAgentSession(id) {
+  if (!state.agentSessions[id]) return null;
+  state.agentSessions[id] = normalizeAgentSessionMode(state.agentSessions[id]);
+  return state.agentSessions[id];
+}
 export function createAgentSession(data = {}) {
   const id = uid();
+  const mode = data.mode === 'roleplay' ? 'roleplay' : 'writer';
   const session = {
     id,
+    mode,
     createdAt: nowIso(),
     updatedAt: nowIso(),
     title: null,
@@ -296,9 +336,11 @@ export function createAgentSession(data = {}) {
     microGranularity: null,
     model: state.prefs.model || 'deepseek-v4-flash',
     styleId: '',
-    ycMode: false,
+    ycMode: mode === 'roleplay',
     roleCard: createEmptyRoleCard(),
     ...data,
+    mode,
+    ycMode: mode === 'roleplay',
   };
   state.agentSessions[id] = session;
   persist();

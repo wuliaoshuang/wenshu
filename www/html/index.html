@@ -13,75 +13,53 @@
 </style>
 </head>
 <body class="index-page">
-  <a class="ghost tr" href="settings.html" aria-label="设置">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-      <circle cx="12" cy="12" r="3"/>
-    </svg>
-  </a>
-
   <section class="index-hero">
     <img class="hero-icon" src="../assets/wenshu_icon.png" alt="文舒">
     <p class="sub">WENSHU · 一座替你听落笔声音的小说工坊</p>
-    <p class="signature">v 5.12 · POWERED BY DEEPSEEK</p>
+    <p class="signature">v 5.15 · POWERED BY DEEPSEEK</p>
   </section>
 
   <section class="entry-grid">
+    <a class="entry-card" href="roleplay.html">
+      <span class="entry-glyph mincho">笔</span>
+      <div class="entry-copy">
+        <h3>角 色 扮 演</h3>
+        <p>纯语C。不规划，不弹卡，只接戏。</p>
+      </div>
+    </a>
     <a class="entry-card" href="agent.html">
       <span class="entry-glyph mincho">墨</span>
-      <h3>墨 小 · Agent</h3>
-      <p>说话就行。聊天里把小说从无到有捋出来——AI 自己判断该问什么、该写什么。</p>
+      <div class="entry-copy">
+        <h3>墨 小 · Agent</h3>
+        <p>说话就行。聊天里把小说从无到有捋出来——AI 自己判断该问什么、该写什么。</p>
+      </div>
     </a>
     <a class="entry-card" href="library.html">
-      <span class="entry-glyph mincho">书</span>
-      <h3>书 房</h3>
-      <p>已立项的小说在此排队等你。在写、已完结、归档，一目了然。</p>
-    </a>
-    <a class="entry-card" href="onboard.html">
-      <span class="entry-glyph mincho">起</span>
-      <h3>立 一 部 新 的</h3>
-      <p>三层递进问答收集创意，AI 替你拟标题、铺大纲、定人物。</p>
-    </a>
-    <a class="entry-card" href="capture.html">
-      <span class="entry-glyph mincho">闪</span>
-      <h3>闪 念</h3>
-      <p>路上想到的伏笔、修订、人物对白——先记下，回头自动归档。</p>
-    </a>
-    <a class="entry-card" href="role-cards.html">
-      <span class="entry-glyph mincho">面</span>
-      <h3>我 的 角 色 卡</h3>
-      <p>管理 AI 角色面具，也设置全局用户角色。纯语C里可随时切换 AI 角色。</p>
+      <span class="entry-glyph mincho">纸</span>
+      <div class="entry-copy">
+        <h3>文 舒</h3>
+        <p>正式作品的入口。进去后选择回书房继续写，或立一部新的。</p>
+      </div>
     </a>
     <a class="entry-card" href="settings.html">
       <span class="entry-glyph mincho">砚</span>
-      <h3>砚 · 设 置</h3>
-      <p>DeepSeek API Key、模型、写作偏好。每部小说立项时会先猜你的口味。</p>
+      <div class="entry-copy">
+        <h3>设 置</h3>
+        <p>DeepSeek API Key、模型、写作偏好。每部小说立项时会先猜你的口味。</p>
+      </div>
     </a>
   </section>
 
-  <p id="resume-banner" style="display:none; max-width: 720px; margin: 0 auto var(--s-6); padding: 0 var(--s-6);"></p>
-
   <footer class="index-foot">
-    <a href="about.html">关 于 文 舒</a>
+    <a href="capture.html">闪 念</a>
     <span class="dot">·</span>
-    <a href="settings.html">设 置</a>
+    <a href="about.html">关 于 文 舒</a>
   </footer>
 
   <script type="module">
-    import { listNovels, getPrefs } from '../js/store.js';
+    import { getPrefs } from '../js/store.js';
     import { bindGlobalTapVibration } from '../js/utils.js';
     bindGlobalTapVibration();
-    const novels = listNovels();
-    const banner = document.getElementById('resume-banner');
-    const inProgress = novels.find((n) => n.status === 'writing' || n.status === 'validating');
-    if (inProgress) {
-      banner.style.display = 'block';
-      const lastCh = inProgress.currentChapter || 1;
-      banner.innerHTML = `<div style="border-top: 1px solid var(--paper-edge); padding-top: var(--s-5); font-family: var(--font-mincho); font-size: 14px; letter-spacing: 0.04em; color: var(--ink-faint); line-height: 1.9;">
-        上次断在 <b style="color: var(--ink)">《${inProgress.title}》第 ${lastCh} 章</b>。
-        <a href="editor.html?novel=${inProgress.id}&ch=${lastCh}" style="color: var(--vermilion); border-bottom: 1px solid var(--vermilion); margin-left: 8px;">继 续 落 笔 →</a>
-      </div>`;
-    }
     if (!getPrefs().apiKey) {
       const tip = document.createElement('div');
       tip.style.cssText = 'max-width: 720px; margin: 0 auto var(--s-5); padding: 0 var(--s-6);';

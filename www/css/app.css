@@ -1118,7 +1118,7 @@
 
 /* Modal */
 .modal-mask {
-  position: fixed; inset: 0; z-index: 998;
+  position: fixed; inset: 0; z-index: 9999;
   background: oklch(20% 0.01 80 / 0.32);
   display: grid; place-items: center;
   animation: fadein .2s ease;
@@ -1197,6 +1197,18 @@
 /* 流式输出光标 */
 .streaming-caret::after {
   content: "▍";
+  color: var(--vermilion);
+  animation: breathe 1s infinite;
+  margin-left: 2px;
+}
+
+.streaming-caret.has-md-content::after {
+  content: none;
+}
+
+.streaming-caret.has-md-content .md-content > :last-child::after {
+  content: "▍";
+  display: inline;
   color: var(--vermilion);
   animation: breathe 1s infinite;
   margin-left: 2px;
@@ -1564,7 +1576,7 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
   font-size: 12px;
   letter-spacing: 0.18em;
   color: var(--ink-ghost);
-  padding: var(--s-6) var(--s-5) var(--s-7);
+  padding: var(--s-0) var(--s-5) var(--s-0);
 }
 .index-foot a {
   color: var(--ink-faint);
@@ -1573,7 +1585,7 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
   transition: color .25s ease, border-color .25s ease;
 }
 .index-foot a:hover { color: var(--vermilion); border-bottom-color: var(--vermilion); }
-.index-foot .dot { color: var(--ink-ghost); margin: 0 10px; }
+.index-foot .dot { color: var(--ink-ghost); margin: 0 5px; }
 
 /* hero 间距收紧 */
 .index-hero { padding-top: var(--s-7); padding-bottom: var(--s-5); }
@@ -2089,7 +2101,7 @@ body.agent-mode {
 .chat-modebar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 12px;
   margin-top: 8px;
 }
@@ -2227,9 +2239,19 @@ body.agent-mode {
 .bubble.ai.awaiting-content .message-body {
   min-height: 18px;
 }
-.bubble .message-body > .message-loading {
-  display: block;
+.bubble .message-body > .message-loading-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin: 2px 0 0;
+  color: var(--ink-ghost);
+  font-family: var(--font-mincho);
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+}
+.bubble .message-body > .message-loading-wrap .message-loading {
+  flex: 0 0 auto;
   transform-origin: center;
   will-change: transform;
 }
@@ -2358,7 +2380,6 @@ body.agent-mode {
 
 .message-loading {
   display: inline-block;
-  content: "";
   width: 16px;
   height: 16px;
   border: 1.5px solid color-mix(in oklab, var(--ink-faint) 34%, transparent);
@@ -4382,12 +4403,13 @@ body:has(.library-wrap) .project-card:hover {
 .index-page .entry-grid {
   gap: 0;
   padding-top: var(--s-5);
+  padding-bottom: var(--s-7);
 }
 
 .index-page .entry-card {
   position: relative;
-  min-height: 154px;
-  padding: 22px 22px 20px;
+  min-height: auto;
+  padding: 16px 20px 16px;
   border: 0;
   border-top: 1px solid var(--paper-edge);
   border-radius: 0;
@@ -4418,6 +4440,26 @@ body:has(.library-wrap) .project-card:hover {
   border-radius: 3px;
   background: color-mix(in oklab, var(--paper) 78%, white);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.38);
+}
+
+.index-page .entry-card {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.index-page .entry-card .entry-glyph {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.index-page .entry-card .entry-copy {
+  min-width: 0;
+  display: block;
+}
+
+.index-page .entry-card h3 {
+  margin-top: 0;
 }
 
 .index-page #resume-banner > div {
@@ -4894,7 +4936,7 @@ body:has(.library-wrap) .project-card:hover {
 
 .index-page .index-hero {
   text-align: center;
-  padding-top: var(--s-9);
+  padding-top: var(--s-6);
   padding-bottom: var(--s-6);
 }
 
@@ -4913,8 +4955,8 @@ body:has(.library-wrap) .project-card:hover {
 }
 
 .index-page .entry-grid {
-  gap: var(--s-5);
-  padding-top: var(--s-7);
+  gap: var(--s-4);
+  padding-top: var(--s-0);
 }
 
 .index-page .entry-card {

@@ -70,7 +70,7 @@ export default defineConfig({
     host: '0.0.0.0',
     open: '/www/html/index.html',
     watch: {
-      ignored: ['**/dist/**', '**/platforms/**', '**/plugins/**', '**/landing/www/**'],
+      ignored: ['**/dist/**', '**/platforms/**', '**/plugins/**'],
     },
   },
   preview: {
