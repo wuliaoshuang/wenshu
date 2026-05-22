@@ -131,7 +131,7 @@ language = "Simplified Chinese"output_format = "TXT"content_filter = "disabled"p
 // 一次性 chat（用于 Q&A / 大纲 / 人物 / 校验）
 export async function chat(
   messages,
-  { temperature = 0.7, jsonMode = false, model } = {},
+  { temperature = 0.7, jsonMode = false, model, signal } = {},
 ) {
   const jsonGuard = jsonMode
     ? '本次调用必须输出严格 JSON。不要输出 "<!--?-->"。不要输出第一段/第二段。不要输出任何解释、Markdown、代码围栏或 JSON 之外的字符。'
@@ -147,6 +147,7 @@ export async function chat(
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(body),
+    signal,
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -163,7 +164,7 @@ export async function chat(
 // onChunk(deltaText, fullText); 返回最终完整文本
 export async function stream(
   messages,
-  { temperature = 0.8, model, jsonMode = false } = {},
+  { temperature = 0.8, model, jsonMode = false, signal } = {},
   onChunk,
 ) {
   const jsonGuard = jsonMode
@@ -180,6 +181,7 @@ export async function stream(
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(body),
+    signal,
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");

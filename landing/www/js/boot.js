@@ -1,5 +1,4 @@
 // 文舒 — 所有页面的引导：Cordova 就绪后配置原生体验
-// 引入方式：<script src="../js/boot.js"></script>（必须在 cordova.js 之后）
 
 (function () {
   function onReady() {
@@ -13,11 +12,25 @@
       }
     } catch (_) { /* webview only */ }
   }
-  if (window.cordova) {
-    document.addEventListener('deviceready', onReady, false);
-  } else {
-    // 浏览器调试也跑一下，确保不报错
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
-    else onReady();
+
+  function bootAfterCordovaProbe() {
+    if (window.cordova) {
+      document.addEventListener('deviceready', onReady, false);
+    } else if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', onReady);
+    } else {
+      onReady();
+    }
   }
+
+  if (window.cordova || document.querySelector('script[src$="/cordova.js"], script[src$="../cordova.js"]')) {
+    bootAfterCordovaProbe();
+    return;
+  }
+
+  const cordovaScript = document.createElement('script');
+  cordovaScript.src = new URL('../cordova.js', document.baseURI).href;
+  cordovaScript.onload = bootAfterCordovaProbe;
+  cordovaScript.onerror = bootAfterCordovaProbe;
+  document.head.appendChild(cordovaScript);
 })();
