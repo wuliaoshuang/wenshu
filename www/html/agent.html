@@ -801,11 +801,22 @@
       s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
       s = s.replace(/(^|[^\*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
       s = s.replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>');
+      s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_m, alt, url) => {
+        const safeUrl = sanitizeMdImageUrl(url);
+        return safeUrl ? `<img class="md-image" src="${escapeAttr(safeUrl)}" alt="${escapeAttr(alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : '';
+      });
       s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, label, url) => {
         const safeUrl = sanitizeMdUrl(url);
         return safeUrl ? `<a href="${escapeAttr(safeUrl)}" target="_blank" rel="noopener">${label}</a>` : label;
       });
       return s;
+    }
+
+    function sanitizeMdImageUrl(url) {
+      const raw = String(url || '').trim();
+      if (/^(https?:|data:image\/)/i.test(raw)) return raw;
+      if (/^[./]/.test(raw)) return raw;
+      return '';
     }
 
     function sanitizeMdUrl(url) {

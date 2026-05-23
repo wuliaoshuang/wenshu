@@ -2361,6 +2361,18 @@ body.agent-mode {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.bubble .md-content .md-image,
+.chapter-bubble .cb-body .md-content .md-image {
+  display: block;
+  max-width: min(100%, 420px);
+  max-height: 460px;
+  height: auto;
+  margin: 0.45em 0 0.85em;
+  border: 1px solid var(--paper-edge);
+  border-radius: 8px;
+  background: var(--paper);
+  object-fit: contain;
+}
 .bubble.ai {
   align-self: flex-start;
   background: var(--paper-deep);
