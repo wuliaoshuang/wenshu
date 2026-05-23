@@ -3,7 +3,12 @@
 
 import { styleHookFor } from "./styles.js";
 import { ROLEPLAY_TEMPLATE } from "./roleplay-template.js";
-import { roleCardHasContent, roleCardToMarkdown } from "./role-card.js";
+import {
+  resolveRoleCardPlaceholders,
+  roleCardHasContent,
+  roleCardToMarkdown,
+  userRoleName,
+} from "./role-card.js";
 
 const GOLDEN_RULES = `三大黄金法则（不可违反）：
 1. 展示而非讲述：用动作和对话表现，不要直接陈述。不写"他很愤怒"，写"他握紧拳头，指节发白"。
@@ -187,11 +192,15 @@ export function summaryPrompt(chapterMeta, body) {
 // 不走 JSON / planner / qcard，只作为同伴角色直接流式接话。
 export function ycChatPrompt(session, dialog) {
   const styleHint = styleHookFor(session?.styleId);
-  const roleCardBlock = roleCardHasContent(session?.roleCard)
-    ? `\n\n【当前角色卡（用于填充模板里的“待填写”，优先级高于模板占位符）】\n${roleCardToMarkdown(session.roleCard)}`
+  const userRole = session?.userRoleCard || null;
+  const aiRole = resolveRoleCardPlaceholders(session?.roleCard, userRole);
+  const userRoleForPrompt = resolveRoleCardPlaceholders(userRole, userRole);
+  const userName = userRoleName(userRole);
+  const roleCardBlock = roleCardHasContent(aiRole)
+    ? `\n\n【当前角色卡（用于填充模板里的“待填写”，优先级高于模板占位符；其中 {{user}} / {{User}} 已替换为“${userName}”）】\n${roleCardToMarkdown(aiRole)}`
     : "";
-  const userRoleBlock = roleCardHasContent(session?.userRoleCard)
-    ? `\n\n【用户角色卡（玩家/用户扮演对象，全局设定；不要替用户做核心行动）】\n${roleCardToMarkdown(session.userRoleCard)}`
+  const userRoleBlock = roleCardHasContent(userRoleForPrompt)
+    ? `\n\n【用户角色卡（玩家/用户扮演对象，全局设定；不要替用户做核心行动）】\n${roleCardToMarkdown(userRoleForPrompt)}`
     : "";
   const sys = `你是中文语C陪写对象「墨小」。这是纯语C模式。
 

@@ -150,7 +150,7 @@
       upsertAgentChapter, appendAgentMessage, patchAgentMessage,
       setAgentMicro, flushAgent,
       listAgentSessions, deleteAgentSession,
-      listAiRoleCards, getAiRoleCard, getUserRoleCard,
+      listAiRoleCards, getAiRoleCard, getUserRoleCard, deleteAiRoleCard,
     } from '../js/store.js';
     import {
       requireApiKey, vibrate, toast, urlParam, bindGlobalTapVibration, cnWordCount, confirmDialog, $,
@@ -164,7 +164,8 @@
     import { STYLE_CARDS } from '../js/styles.js';
     import {
       normalizeRoleCard,
-      roleCardDisplayName, roleCardInitial,
+      replaceRoleCardPlaceholders,
+      roleCardDisplayName, roleCardInitial, userRoleName,
     } from '../js/role-card.js';
 
     const MODELS = [
@@ -1037,7 +1038,11 @@
 
     function firstRoleCardOpening(card) {
       const c = normalizeRoleCard(card || {});
-      return (c.openingDialogues || []).find((d) => d.role === 'ai' && String(d.content || '').trim())?.content?.trim() || '';
+      const opening = (c.openingDialogues || []).find((d) => d.role === 'ai' && String(d.content || '').trim())?.content?.trim() || '';
+      return replaceRoleCardPlaceholders(opening, {
+        userName: userRoleName(getUserRoleCard()),
+        charName: roleCardDisplayName(c),
+      });
     }
 
     function applyRoleCardOpening(card) {
@@ -1133,13 +1138,18 @@
           ? `<span class="role-card-avatar"><img class="rc-avatar-img" src="${escapeAttr(card.avatarDataUrl)}" alt=""></span>`
           : `<span class="role-card-avatar">${escapeHtml(roleCardInitial(card))}</span>`;
         return `
-        <button type="button" class="role-select-item ${card.id === current ? 'current' : ''}" data-id="${card.id}">
-          ${avatar}
-          <span class="role-select-main">
-            <b>${escapeHtml(roleCardDisplayName(card) || '未命名角色')}</b>
-            <small>${escapeHtml(card.identity || card.tags || card.personality || 'AI 角色')}</small>
-          </span>
-        </button>`;
+        <div class="role-select-row">
+          <button type="button" class="role-select-item ${card.id === current ? 'current' : ''}" data-id="${card.id}">
+            ${avatar}
+            <span class="role-select-main">
+              <b>${escapeHtml(roleCardDisplayName(card) || '未命名角色')}</b>
+              <small>${escapeHtml(card.identity || card.tags || card.personality || 'AI 角色')}</small>
+            </span>
+          </button>
+          <button type="button" class="role-select-delete" data-delete-role-id="${card.id}" aria-label="删除 ${escapeAttr(roleCardDisplayName(card) || '未命名角色')}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 14h10l1-14"/><path d="M9 7V4h6v3"/></svg>
+          </button>
+        </div>`;
       }).join('');
       $roleCardPicker.innerHTML = `
         <button type="button" class="role-select-item ${!current ? 'current' : ''}" data-id="">
@@ -1906,6 +1916,36 @@
     });
     $roleCardBtn.addEventListener('click', openRoleCardModal);
     $roleCardPicker.addEventListener('click', async (e) => {
+      const deleteBtn = e.target.closest('[data-delete-role-id]');
+      if (deleteBtn) {
+        if (!session) return;
+        if (busy) {
+          closeRoleCardModal();
+          toast('请先停止当前输出，再删除角色', 'error');
+          return;
+        }
+        const deleteId = deleteBtn.dataset.deleteRoleId;
+        const card = getAiRoleCard(deleteId);
+        const name = roleCardDisplayName(card) || '未命名角色';
+        const ok = await confirmDialog(
+          `删除「${escapeHtml(name)}」？<br><br>使用这张卡的角色扮演会话会取消面具，已有聊天记录仍会保留。`,
+          { okLabel: '删 除', cancelLabel: '取 消' }
+        );
+        if (!ok) return;
+        const wasCurrent = session.roleCardId === deleteId;
+        deleteAiRoleCard(deleteId);
+        if (wasCurrent) {
+          session.roleCardId = null;
+          session.roleCard = normalizeRoleCard({});
+          updateAgentSession(sessionId, { roleCardId: null, roleCard: session.roleCard });
+          refreshRoleButtonLabel();
+          replayYc();
+        }
+        renderRoleCardPicker();
+        toast('已删除角色卡', 'success');
+        vibrate('ok');
+        return;
+      }
       const item = e.target.closest('.role-select-item');
       if (!item || !session) return;
       if (busy) {

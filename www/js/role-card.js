@@ -217,6 +217,51 @@ export function roleCardInitial(card, fallback = '角') {
   return [...String(name).trim()][0] || fallback;
 }
 
+export function userRoleName(card, fallback = '用户') {
+  const c = normalizeRoleCard(card || {});
+  return c.roleName || c.userAddress || fallback;
+}
+
+export function replaceRoleCardPlaceholders(text, { userName = '用户', charName = '' } = {}) {
+  return String(text || '')
+    .replace(/\{\{\s*user\s*\}\}/gi, userName || '用户')
+    .replace(/\{\{\s*char\s*\}\}/gi, charName || '');
+}
+
+export function resolveRoleCardPlaceholders(card, userCard = null) {
+  const c = normalizeRoleCard(card || {});
+  const userName = userRoleName(userCard);
+  const charName = roleCardDisplayName(c);
+  const replace = (value) => replaceRoleCardPlaceholders(value, { userName, charName });
+
+  for (const field of ROLE_CARD_FIELDS) c[field.key] = replace(c[field.key]);
+  c.customRules = replace(c.customRules);
+  c.intro = replace(c.intro);
+  c.scene = replace(c.scene);
+  c.systemInstruction = replace(c.systemInstruction);
+  c.postHistoryInstructions = replace(c.postHistoryInstructions);
+  c.detail = replace(c.detail);
+  c.tags = replace(c.tags);
+  c.creator = replace(c.creator);
+  c.characterVersion = replace(c.characterVersion);
+  c.examples = c.examples.map((ex) => ({
+    scene: replace(ex.scene),
+    correct: replace(ex.correct),
+    wrong: replace(ex.wrong),
+  }));
+  c.backgrounds = c.backgrounds.map(replace);
+  c.openingDialogues = c.openingDialogues.map((d) => ({
+    ...d,
+    content: replace(d.content),
+  }));
+  c.worldBook = c.worldBook.map((entry) => ({
+    ...entry,
+    keys: replace(entry.keys),
+    content: replace(entry.content),
+  }));
+  return c;
+}
+
 // === AI 生成 - 三种模式 ===
 
 export function roleCardAiPrompt(seed = '', target = 'ai') {

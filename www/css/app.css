@@ -3491,9 +3491,38 @@ body.agent-mode {
   font-family: var(--font-mincho);
   text-align: left;
 }
+.role-select-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  align-items: stretch;
+  gap: 8px;
+}
+.role-select-delete {
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  min-height: 42px;
+  border: 1px solid var(--paper-edge);
+  background: var(--paper);
+  color: var(--ink-ghost);
+}
+.role-select-delete svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .role-select-item:hover {
   border-color: var(--ink);
   background: var(--paper-deep);
+}
+.role-select-delete:hover {
+  border-color: color-mix(in oklab, var(--vermilion) 72%, var(--paper-edge));
+  background: color-mix(in oklab, var(--vermilion) 5%, transparent);
+  color: var(--vermilion);
 }
 .role-select-item.current {
   border-color: var(--vermilion);
@@ -4368,8 +4397,8 @@ body:has(.library-wrap) .project-card:hover {
   mask-image: linear-gradient(to bottom, transparent 0, #000 120px, #000 calc(100% - 80px), transparent);
 }
 
-.index-page > *,
-.role-cards-page > * {
+.index-page > :not(.modal-mask):not(.toast),
+.role-cards-page > :not(.modal-mask):not(.toast) {
   position: relative;
   z-index: 1;
 }
@@ -4437,7 +4466,7 @@ body:has(.library-wrap) .project-card:hover {
 .index-page .entry-card .entry-glyph {
   width: 34px;
   height: 34px;
-  border-radius: 3px;
+  border-radius: 5px;
   background: color-mix(in oklab, var(--paper) 78%, white);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.38);
 }
@@ -4961,7 +4990,7 @@ body:has(.library-wrap) .project-card:hover {
 
 .index-page .entry-card {
   border: 1px solid color-mix(in oklab, var(--paper-edge) 72%, transparent);
-  border-radius: 8px;
+  border-radius: 10px;
   background: color-mix(in oklab, var(--paper) 82%, transparent);
   box-shadow: none;
 }
@@ -6420,7 +6449,7 @@ body.agent-mode .chat-input-row {
 
 .role-cards-page #ai-card-list .rc-role-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 34px;
+  grid-template-columns: minmax(0, 1fr) 34px 34px;
   align-items: stretch;
   gap: 8px;
 }
@@ -6444,7 +6473,8 @@ body.agent-mode .chat-input-row {
   min-width: 0;
 }
 
-.role-cards-page #ai-card-list .rc-role-edit-btn {
+.role-cards-page #ai-card-list .rc-role-edit-btn,
+.role-cards-page #ai-card-list .rc-role-delete-btn {
   display: grid;
   place-items: center;
   align-self: stretch;
@@ -6454,7 +6484,8 @@ body.agent-mode .chat-input-row {
   color: var(--ink-ghost);
 }
 
-.role-cards-page #ai-card-list .rc-role-edit-btn svg {
+.role-cards-page #ai-card-list .rc-role-edit-btn svg,
+.role-cards-page #ai-card-list .rc-role-delete-btn svg {
   width: 15px;
   height: 15px;
   fill: none;
@@ -6465,16 +6496,20 @@ body.agent-mode .chat-input-row {
 }
 
 .role-cards-page #ai-card-list .rc-role-row.current .rc-role-view,
-.role-cards-page #ai-card-list .rc-role-edit-btn:hover {
+.role-cards-page #ai-card-list .rc-role-edit-btn:hover,
+.role-cards-page #ai-card-list .rc-role-delete-btn:hover {
   background: color-mix(in oklab, var(--vermilion) 5%, transparent);
 }
 
 .role-cards-page #ai-card-list .rc-role-row.current .rc-role-view,
-.role-cards-page #ai-card-list .rc-role-edit-btn:hover {
+.role-cards-page #ai-card-list .rc-role-edit-btn:hover,
+.role-cards-page #ai-card-list .rc-role-delete-btn:hover {
   border-color: color-mix(in oklab, var(--vermilion) 72%, var(--paper-edge));
 }
 
-.role-cards-page #ai-card-list .rc-role-edit-btn:hover {
+.role-cards-page #ai-card-list .rc-role-edit-btn:hover,
+.role-cards-page #ai-card-list .rc-role-delete-btn:hover,
+.role-cards-page .rc-danger-btn:hover {
   color: var(--vermilion);
 }
 

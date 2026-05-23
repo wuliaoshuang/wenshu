@@ -428,6 +428,12 @@ export function deleteAiRoleCard(id) {
   ensureRoleCards();
   if (!state.roleCards.ai) return;
   delete state.roleCards.ai[id];
+  for (const session of Object.values(state.agentSessions || {})) {
+    if (session?.roleCardId !== id) continue;
+    session.roleCardId = null;
+    session.roleCard = createEmptyRoleCard();
+    session.updatedAt = nowIso();
+  }
   touchRoleCards();
   writeRoleCardsBackup(state.roleCards);
   persist({ syncRoleCards: false });
