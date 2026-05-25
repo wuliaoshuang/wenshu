@@ -19,7 +19,8 @@ function modelName() {
 }
 
 function wantsThinking(model) {
-  return String(model || "").toLowerCase().includes("pro");
+  const normalized = String(model || "").toLowerCase();
+  return normalized.includes("pro") && !normalized.includes("flash");
 }
 
 function attachThinking(body) {
